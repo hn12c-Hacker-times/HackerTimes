@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Newest News - HackerTimes{% endblock %}
+
+{% block content %}
+    <ul>
+        {% for news in newest_list %}
+            <li>
+                <strong><a href="{{ news.url }}">{{ news.title }}</a></strong> 
+                by {{ news.author }} (Points: {{ news.points }}, Published: {{ news.published_date }})
+            </li>
+        {% empty %}
+            <li>No news available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+

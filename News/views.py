@@ -6,11 +6,23 @@ from .forms import NewsForm
 
 # Create your views here.
 
-# Vista de la lista de news
 class NewListView(ListView):
     model = News
     template_name = 'Newslist.html'
-    context_object_name = 'New'
+    context_object_name = 'news_list'
+    
+    def get_queryset(self):
+        # Ordenar por puntos (o el criterio que elijas)
+        return News.objects.order_by('-points')
+
+# Vista de la lista de news
+class NewestListView(ListView):
+    model = News
+    template_name = 'Newestlist.html'
+    context_object_name = 'newest_list'
+    
+    def get_queryset(self):
+        return News.objects.order_by('-published_date')
 
 # Vista de la lista de comments
 class CommentListView(ListView):
