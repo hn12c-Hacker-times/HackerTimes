@@ -17,9 +17,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('title', models.CharField(max_length=200)),
                 ('url', models.URLField()),
+                ('text', models.CharField(max_length=200)),
                 ('author', models.CharField(max_length=100)),
                 ('published_date', models.DateField()),
-                ('id', models.BigIntegerField(primary_key=True, serialize=False, unique=True)),
             ],
         ),
         migrations.CreateModel(
