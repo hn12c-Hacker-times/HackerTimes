@@ -10,17 +10,21 @@
                 <tbody>
                     <tr>
                         <td class="titleline">
-                            <img src="/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
                             <span class="titleline">
-                                <a href="{{ news.url }}" style="color:#000000">{{ news.title }}</a> <span class="comhead">( {{ news.author }} ) </span> 
+                                <a href="{{ news.url }}" style="color:#000000">{{ news.title }}</a> 
+                                <span class="comhead">( {{ news.author }} ) </span> 
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <td class="subtext">
                         <span class="subtext">
-                            {{ news.points }} points by <a href="example.com"> testuser</a> X minutes ago | <a href="example.com"> hide</a> | <a href="example.com"> past</a> | <a href="example.com"> discuss</a>
-                            
+                            {{ news.points }} points by <a href="example.com"> testuser</a> 
+                            {{ news.published_date|timesince }} ago | 
+                            <a href="example.com"> hide</a> | 
+                            <a href="example.com"> past</a> | 
+                            <a href="example.com"> discuss</a>
                         </span>
                     </td>
                     </tr>
@@ -34,4 +38,3 @@
     {% endfor %}
     </ol>
 {% endblock %}
-

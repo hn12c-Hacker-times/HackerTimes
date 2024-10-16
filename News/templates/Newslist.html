@@ -21,8 +21,11 @@
                             <tr>
                                 <td class="subtext">
                                 <span class="subtext">
-                                    {{ new.points }} points by <a href="example.com"> testuser</a> X minutes ago | <a href="example.com"> hide</a> | <a href="example.com"> past</a> | <a href="example.com"> discuss</a>
-                                    
+                                    {{ new.points }} points by <a href="example.com"> testuser</a> 
+                                    {{ new.published_date|timesince }} ago | 
+                                    <a href="example.com"> hide</a> | 
+                                    <a href="example.com"> past</a> | 
+                                    <a href="example.com"> discuss</a>
                                 </span>
                             </td>
                             </tr>
@@ -36,6 +39,3 @@
             {% endfor %}
     </ol>
 {% endblock %}
-
-
-
