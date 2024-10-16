@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}HackerTimes{% endblock %}</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-    </style>
-</head>
+    <head>
+        {% load static %}
+        <meta name="referrer" content="origin">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!--<link rel="stylesheet" type="text/css" href="static/news.css"> --> 
+        <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
+        <link rel="icon" href="y18.svg">
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
+        <title>Hacker News</title>
+    </head>
 <body>
     <center>
         <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="85%" bgcolor="#f6f6ef">
             <tbody>
+                
                 <tr>
                     <td bgcolor="#ff6600">
                         <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding:2px">
@@ -19,7 +22,7 @@
                                 <tr>
                                     <td style="width:18px;padding-right:4px">
                                         <a href="https://news.ycombinator.com">
-                                            <img src="y18.svg" width="18" height="18" style="border:1px white solid; display:block">
+                                            <img src="{% static 'y18.svg' %}" width="18" height="18" style="border:1px white solid; display:block">
                                         </a>
                                     </td>
                                     <td style="line-height:12pt; height:10px;">
@@ -44,11 +47,14 @@
                         </table>
                     </td>
                 </tr>
+                
                 <tr id="pagespace" title="" style="height:10px"></tr>
                 <tr>
-                    <td>
+                    
+                    <td class="title">
                         {% block content %}{% endblock %}
                     </td>
+                
                 </tr>
             </tbody>
         </table>

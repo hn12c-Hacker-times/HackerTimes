@@ -1,0 +1,37 @@
+<ul>
+    {% load static %}
+    {% for new in news_list %}
+    <li>
+        <tr>            
+            <td class="titleline">
+                <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a> <span class="comhead">( {{ new.author }} ) </span> 
+            </td>
+        </tr>
+        <tr>            
+            <td class="titleline">
+                <span class="comhead">(Points: {{ new.points }}, Published: {{ new.published_date }})  </span>  
+            </td>
+        </tr>
+        
+    </li>
+            
+    {% empty %}
+    <li>No news available.</li>
+    {% endfor %}
+</ul>
+
+
+<ul>
+    {% load static %}
+        {% for new in news_list %}
+            <li>
+                <span class="titleline">
+                    <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a> <span class="comhead">( {{ new.author }} ) </span> 
+                    (Points: {{ new.points }}, Published: {{ new.published_date }})
+                </span>
+            </li>
+        
+        {% empty %}
+            <li>No news available.</li>
+        {% endfor %}
+</ul>
