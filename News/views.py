@@ -3,6 +3,8 @@ from django.views.generic import ListView
 from django.utils import timezone
 from .models import News, Comments
 from .forms import NewsForm  
+from datetime import date, datetime
+import tldextract
 
 # Create your views here.
 
@@ -37,7 +39,7 @@ def create_news(request):
         if form.is_valid():
             news = form.save(commit=False) 
             news.author = 'default_author'  # Establece el autor hardcoded
-            news.published_date = timezone.now()
+            news.urlDomain =  tldextract.extract(form.cleaned_data.get('url')).domain
             news.save()
             return redirect('news:news_list')  # Redirige a la página 'newest'
     else:
