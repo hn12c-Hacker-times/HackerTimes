@@ -38,9 +38,16 @@
                                         </span>
                                     </td>
                                     <td style="text-align:right;padding-right:4px;">
-                                        <span class="pagetop">
-                                            <a href="login?goto=news">login</a>
-                                        </span>
+                                        {% if request.session.user_data %}
+                                            <span class="pagetop">
+                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> |  <!-- Muestra el nombre de usuario -->
+                                                <a href="{% url 'news:logout' %}">logout</a>
+                                            </span>
+                                        {% else %}
+                                            <span class="pagetop">
+                                                <a href="{% url 'news:login' %}">login</a>
+                                            </span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             </tbody>

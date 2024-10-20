@@ -1,3 +1,11 @@
 asgiref==3.8.1
+certifi==2024.8.30
+charset-normalizer==3.4.0
 Django==5.1.2
+filelock==3.16.1
+idna==3.10
+requests==2.32.3
+requests-file==2.1.0
 sqlparse==0.5.1
+tldextract==5.1.2
+urllib3==2.2.3
