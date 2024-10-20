@@ -4,10 +4,13 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import News, Comments
-from .forms import NewsForm  
+from .forms import NewsForm
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.models import User
 from datetime import date, datetime
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from django.contrib.auth import logout as auth_logout
 import os
 import tldextract
 
@@ -36,6 +39,13 @@ class CommentListView(ListView):
     model = Comments
     template_name = 'Comments_list.html'
     context_object_name = 'books'
+
+def user_profile(request):
+    
+    # Pasar la información del usuario al template
+    return render(request, 'user_profile.html')
+
+#LOGIN DE GOOGLE
 
 @csrf_exempt
 def submit(request):
@@ -73,3 +83,11 @@ def login(request):
                 return HttpResponse(status=403)  # Token no válido
     
     return render(request, 'sign_in.html')  # Mostrar la página de login de Google
+
+def logout(request):
+    # Cerrar la sesión del usuario
+    auth_logout(request)  
+    # Limpiar la sesión
+    request.session.flush()  
+    # Redirigir a la lista de noticias
+    return redirect('news:news_list')
