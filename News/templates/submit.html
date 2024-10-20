@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta name="referrer" content="origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="news.css">
+    <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
     <link rel="icon" href="y18.svg">
-    <meta name="robots" content="noindex">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
     <title>Submit | Hacker News</title>
 </head>
 <body>
@@ -19,7 +20,7 @@
                                 <tr>
                                     <td style="width:18px;padding-right:4px">
                                         <a href="https://news.ycombinator.com">
-                                            <img src="y18.svg" width="18" height="18" style="border:1px white solid; display:block">
+                                            <img src="{% static 'y18.svg' %}" width="18" height="18" style="border:1px white solid; display:block">
                                         </a>
                                     </td>
                                     <td style="line-height:12pt; height:10px;">
@@ -40,19 +41,19 @@
                                     <tr>
                                         <td>Title</td>
                                         <td>
-                                            <input type="text" name="title" value="{{ form.title.value }}" size="50" required>
+                                            <input type="text" name="title" value="" size="50" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>URL</td>
                                         <td>
-                                            <input type="url" name="url" value="{{ form.url.value }}" size="50">
+                                            <input type="url" name="url" value="" size="50">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>Text</td>
                                         <td>
-                                            <textarea name="text" rows="4" cols="49" wrap="virtual">{{ form.text.value }}</textarea>
+                                            <textarea name="text" rows="4" cols="49" wrap="virtual"></textarea>
                                         </td>
                                     </tr>
                                     <tr>

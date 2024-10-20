@@ -50,10 +50,19 @@
             margin-top: 20px;
         }
     </style>
+    <head>
+        {% load static %}
+        <meta name="referrer" content="origin">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
+        <link rel="icon" href="y18.svg">
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
+        <title>Login | Hacker News</title>
+    </head>
 </head>
 <body>
 
-<div class="container">
+<div class="container" style="background-color:#f6f6ef;">
     {% if request.session.user_data %}
     <div>
         <p>Hi {{ request.session.user_data.given_name }} 🙂</p>
@@ -62,15 +71,16 @@
         <p>Click here to <a href="/sign-out">Sign out</a></p>
     </div>
     {% else %}
-    <div>
-        <p>Hi there 🙂 </p>
-        <p>Click below to sign in with Google</p>
+    <div style="background-color:#f6f6ef;">
+        <p class="pagetop" style="background-color:#ff6600;">Hi there 🙂 </p>
+        <p >Click below to sign in with Google</p>
         <div id="g_id_onload"
             data-client_id="874622848519-8jml30qgbbb6ldplguu5l8uh5lja1nup.apps.googleusercontent.com"
             data-context="signin"
             data-ux_mode="redirect"
             data-login_uri="http://localhost:8000/news/submit/"
-            data-itp_support="true">
+            data-itp_support="true"
+            >
         </div>
 
         <div class="g_id_signin"
@@ -79,7 +89,8 @@
             data-theme="outline"
             data-text="signin_with"
             data-size="large"
-            data-logo_alignment="left">
+            data-logo_alignment="left"
+            >
         </div>
     </div>
     {% endif %}
