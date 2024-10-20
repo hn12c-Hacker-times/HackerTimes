@@ -5,7 +5,7 @@ from django.db import models
 class News(models.Model):
     title = models.CharField(max_length=200)
     url = models.URLField(max_length=200)
-    urlDomain = models.CharField(max_length=200);
+    urlDomain = models.CharField(max_length=200)
     text = models.TextField(max_length=200)
     author = models.CharField(max_length=100)
     published_date = models.DateTimeField(auto_now=True)
