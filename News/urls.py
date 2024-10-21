@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import NewListView
 from .views import NewestListView
+from .views import CommentListView
 from . import views 
 
 app_name='news'
@@ -12,5 +13,5 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('user/', views.user_profile, name='user_profile'),
     path('logout/', views.logout, name='logout'),
-    #path('comments/', CommentListView.as_view(), name='comment_list'),
+    path('comments/', CommentListView.as_view(), name='comments_list'),
 ]

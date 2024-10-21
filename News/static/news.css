@@ -204,3 +204,7 @@ li::before{
   margin-right: 0px;
   align-self: flex-start;
 }
+.comentListClass {   content:none;
+  margin-right: 0px;
+  align-self: flex-start; 
+}

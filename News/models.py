@@ -30,9 +30,12 @@ class News(models.Model):
         return self.title
     
 class Comments(models.Model):
-    text = models.CharField(max_length=200)
-    author = models.CharField(max_length=100)
-    News = models.ForeignKey(News, on_delete=models.CASCADE)
+    text = models.CharField(max_length=1000)
+    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    published_date = models.DateTimeField(auto_now=True)
+    New = models.ForeignKey(News, on_delete=models.CASCADE)
+
+
 
 
     def __str__(self):

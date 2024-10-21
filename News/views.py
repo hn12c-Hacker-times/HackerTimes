@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.views.generic import ListView
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import News, Comments
@@ -22,8 +22,17 @@ class NewListView(ListView):
     context_object_name = 'news_list'
     
     def get_queryset(self):
+
+        username = self.request.GET.get("username", "")
+        if username:
+            res = News.objects.filter(author=username).order_by('-published_date')
+            if not res.exists():
+                return HttpResponse(status=404)
+            else: 
+                return res
         # Ordenar por puntos (o el criterio que elijas)
         return News.objects.order_by('-points')
+        
 
 # Vista de la lista de news
 class NewestListView(ListView):
@@ -34,11 +43,24 @@ class NewestListView(ListView):
     def get_queryset(self):
         return News.objects.order_by('-published_date')
 
+        
+
 # Vista de la lista de comments
 class CommentListView(ListView):
     model = Comments
-    template_name = 'Comments_list.html'
-    context_object_name = 'books'
+    template_name = 'Commentslist.html'
+    context_object_name = 'comments_list'
+    
+    def get_queryset(self):
+        username = self.request.GET.get("username", "")
+        if username:
+            res = Comments.objects.filter(username=username).order_by('-published_date')
+            if not res.exists():
+                return HttpResponse(status=404)  # No se encontraron comentarios
+            else:
+                return res
+        return Comments.objects.order_by('-published_date')
+
 
 def user_profile(request):
     
@@ -51,8 +73,13 @@ def user_profile(request):
 def submit(request):
     user_data = request.session.get('user_data')
 
+    username = request.GET.get("username", "")
+    if username:
+         return redirect('/?username=' + username)
     if user_data:
         return create_news(request, user_data)
+
+
     return login(request)
 
 # Vista para crear una nueva News

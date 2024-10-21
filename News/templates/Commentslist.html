@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Newest Comments - HackerTimes{% endblock %}
+
+{% block content %}
+    <ul style="all: revert; list-style-type: none;  margin: 0; padding: 0; content: none;">
+        <style>
+            li {
+                list-style-type: none; /* This will remove bullets from all <li> */
+            }
+            li:before {
+                content: none; /* Example modification */
+                /* Other styles */
+            }
+        </style>
+        {% for comment in comments_list %}
+        <li class="comentListClass">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
+                <tbody>
+                    <tr>
+                        <!--td style="padding: 0; margin: 0; border: none; display: inline-block;">
+
+                            <span class="titleline" style="padding: 0; margin: 0; color:#828282">
+                                user:&nbsp&nbsp&nbsp   
+                            </span>
+
+                        </td  -->
+                        
+                        <td style="padding: 0; margin: 0; border: none; display: inline-block;">
+                            <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <span class="comhead" style="padding: 0; margin: 0;">
+                                <a href="/user/?username={{ comment.author }}" style="color:#828282">{{ comment.author }}</a> 
+                                {{ comment.published_date|timesince }} ago  | 
+                                <a href="/item/?title={{ comment.New.title }}" style="color:#828282"> parent | </a> 
+                                | contex | favorite | on: <a href="/item/?title={{ comment.New.title }}" style="color:#828282">{{ comment.New.title }}</a>
+                                <br>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="titleline" style="padding: 0; margin: 0; border: none;">
+                         <span class="titleline" style="padding: 0; margin: 0;">
+                            &nbsp&nbsp&nbsp  {{ comment.text }}
+                        </span>
+                    </td>
+                    </tr>
+                    <tr class="spacer" style="height:15px"></tr>
+                </tbody>
+            </table>
+        </li>
+    
+    {% empty %}
+        <li>No comments available.</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

@@ -4,15 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
+    {% load static %}
+    <meta name="referrer" content="origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<link rel="stylesheet" type="text/css" href="static/news.css"> --> 
+    <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
+    <link rel="icon" href="y18.svg">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
+    <title>Hacker News</title>
 </head>
 <body>
-    <h1>User Profile</h1>
+    <center>
+        <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="85%" bgcolor="#f6f6ef">
+            <tbody>
+                
+                <tr>
+                    <td bgcolor="#ff6600">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding:2px">
+                            <tbody>
+                                <tr>
+                                    <td style="width:18px;padding-right:4px">
+                                        <a href="http://localhost:8000/">
+                                            <img src="{% static 'y18.svg' %}" width="18" height="18" style="border:1px white solid; display:block">
+                                        </a>
+                                    </td>
+                                    <td style="line-height:12pt; height:10px;">
+                                        <span class="pagetop">
+                                            <b class="hnname"><a href="{% url 'news:news_list' %}">Hacker News</a></b>
+                                            <a href="{% url 'news:newest_news' %}">new</a> | 
+                                            <a href="front">past</a> | 
+                                            <a href="{% url 'news:comments_list' %}">comments</a> | 
+                                            <a href="ask">ask</a> | 
+                                            <a href="show">show</a> | 
+                                            <a href="jobs">jobs</a> | 
+                                            <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a>
+                                        </span>
+                                    </td>
+                                    <td style="text-align:right;padding-right:4px;">
+                                        {% if request.session.user_data %}
+                                            <span class="pagetop">
+                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> |  <!-- Muestra el nombre de usuario -->
+                                                <a href="{% url 'news:logout' %}">logout</a>
+                                            </span>
+                                        {% else %}
+                                            <span class="pagetop">
+                                                <a href="{% url 'news:login' %}">login</a>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                
+                <tr id="pagespace" title="" style="height:10px"></tr>
+                <tr>
+                    
+                    <td>
+                        <table border="0">
+                            <tbody>
+                                <tr class="athing">
+                                    <td valign="top">user:</td>
+                                    <td timestamp="1557689318">
+                                        <a href="/user/?username={{ request.session.user_data.name }}" class="hnuser">{{ request.session.user_data.name }}</a> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">created:</td>
+                                    <td>
+                                       {{ request.session.user_data.created_at }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">karma:</td>
+                                    <td>{{user.karma}}</td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">about:</td>
+                                    <td style="overflow:hidden"></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="/?id={{ request.session.user_data.name }}"><u>submissions</u></a>
+                                    </td>
+                                </tr>
+                                <!--tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="threads?id=torginus"><u>comments</u></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="favorites?id=torginus"><u>favorites</u></a>
+                                    </td>
+                                </tr-->
+                            </tbody>
+                        </table>
+                        <br>
+                        <br>
+                    </td>
+                
+                </tr>
+            </tbody>
+        </table>
+    </center>
     
-    <p><strong>Username:</strong> {{ request.session.user_data.name }}</p>
-    <p><strong>Email:</strong> {{ request.session.user_data.email }}</p>
-    
-    <!-- Agrega más campos si necesitas -->
-    
-    <a href="{% url 'news:logout' %}">Logout</a>
 </body>
 </html>
+
+</td>
