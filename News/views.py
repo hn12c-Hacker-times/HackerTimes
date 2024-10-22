@@ -3,7 +3,7 @@ from django.views.generic import ListView
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import News, Comments
+from .models import News, Comments, Search
 from .forms import NewsForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
@@ -11,6 +11,7 @@ from datetime import date, datetime
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.contrib.auth import logout as auth_logout
+from django.db.models import Q
 import os
 import tldextract
 
@@ -61,6 +62,27 @@ class CommentListView(ListView):
                 return res
         return Comments.objects.order_by('-published_date')
 
+# Vista de la lista de search
+class SearchListView(ListView):
+    model = News  # We are searching through the News model
+    template_name = 'searchlist.html'  # The template that displays the search results
+    context_object_name = 'search_list'  # The name of the context passed to the template
+
+    def get_queryset(self):
+        # Get the search query from the URL parameters
+        query = self.request.GET.get('q')
+
+        if query:
+            # Save the search query in the Search model for tracking (optional)
+            if self.request.user.is_authenticated:
+                Search.objects.create(text=query, author=self.request.user)
+
+            # Filter the news items based on the search query
+            return News.objects.filter(
+                Q(title__icontains=query)
+            ).order_by('-published_date')
+        else:
+            return News.objects.none()
 
 def user_profile(request):
     
