@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from django.db import models
+from django import forms
 from django.contrib.auth.models import AbstractUser
 
 # Modelo de usuario personalizado
@@ -19,9 +20,9 @@ class CustomUser(models.Model):
 
 class News(models.Model):
     title = models.CharField(max_length=200)
-    url = models.URLField(max_length=200)
+    url = models.URLField(max_length=200, blank=True)
     urlDomain = models.CharField(max_length=200)
-    text = models.TextField(max_length=200)
+    text = models.TextField(max_length=200, blank=True)
     author = models.CharField(max_length=100)
     published_date = models.DateTimeField(auto_now=True)
     points = models.IntegerField(default=0) 

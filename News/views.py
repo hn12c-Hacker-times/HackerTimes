@@ -44,7 +44,14 @@ class NewestListView(ListView):
     def get_queryset(self):
         return News.objects.order_by('-published_date')
 
-        
+class AskListView(ListView):
+    model = News
+    template_name = 'askList.html'
+    context_object_name = 'ask_list'
+
+    def get_queryset(self):
+        # Filtrar los objetos News que no tienen URL
+        return News.objects.filter(url='').order_by('-published_date')     
 
 # Vista de la lista de comments
 class CommentListView(ListView):
@@ -84,6 +91,10 @@ class SearchListView(ListView):
         else:
             return News.objects.none()
 
+def ask_detail(request, ask_id):
+    ask = get_object_or_404(News, id=ask_id)
+    return render(request, 'ask_detail.html', {'ask': ask})
+
 def user_profile(request):
     
     # Pasar la información del usuario al template
@@ -113,6 +124,8 @@ def create_news(request, user_data):
             news.author = user_data['name']
             news.urlDomain =  tldextract.extract(form.cleaned_data.get('url')).domain
             news.save()
+            print("*" + news.urlDomain + "*")
+            if news.urlDomain == "": return redirect('news:ask_list')
             return redirect('news:news_list')  # Redirige a la página 'newest'
     else:
         form = NewsForm()

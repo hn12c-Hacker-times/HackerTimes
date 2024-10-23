@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ask.title }} - Hacker News{% endblock %}
+
+{% block content %}
+<table class="fatitem" border="0">
+    <tbody>
+        <tr class="athing" id="{{ ask.id }}">
+            <td align="right" valign="top" class="title"><span class="rank"></span></td>
+            <td valign="top" class="votelinks">
+                <center>
+                    <a id="up_{{ ask.id }}" class="clicky" href="vote?id={{ ask.id }}&amp;how=up&amp;auth={{ request.session.auth_token }}&amp;goto=item%3Fid%3D{{ ask.id }}">
+                        <div class="votearrow" title="upvote"></div>
+                    </a>
+                </center>
+            </td>
+            <td class="title">
+                <span class="titleline">{{ ask.title }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"></td>
+            <td class="subtext">
+                <span class="subline">
+                    <span class="score" id="score_{{ ask.id }}">{{ ask.score }} points</span> by
+                    <a href="user?id={{ ask.username }}" class="hnuser">{{ ask.username }}</a>
+                    <span class="age" title="{{ ask.created_at }}"><a href="item?id={{ ask.id }}">{{ ask.time_ago }}</a></span>
+                    <span id="unv_{{ ask.id }}"></span>
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td style="height:2px"></td>
+        </tr>
+        <tr>
+            <td colspan="2"></td>
+            <td>
+                <div class="toptext">{{ ask.content }}</div>
+            </td>
+        </tr>
+        <tr><td style="height:10px"></td></tr>
+        <tr>
+            <td colspan="2"></td>
+            <td>
+                <form action="comment" method="post">
+                    <input type="hidden" name="parent" value="{{ ask.id }}">
+                    <textarea name="text" rows="8" cols="80" wrap="virtual"></textarea><br><br>
+                    <input type="submit" value="add comment">
+                </form>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
