@@ -19,4 +19,5 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('comments/', CommentListView.as_view(), name='comments_list'),
     path('search/', SearchListView.as_view(), name='search_list'),
+    path('hide/<int:submission_id>/', views.hide_submission, name='hide_submission'),
 ]

@@ -23,16 +23,16 @@ class NewListView(ListView):
     context_object_name = 'news_list'
     
     def get_queryset(self):
-
         username = self.request.GET.get("username", "")
         if username:
-            res = News.objects.filter(author=username).order_by('-published_date')
+            res = News.objects.filter(author=username, is_hidden=False).order_by('-published_date')
             if not res.exists():
                 return HttpResponse(status=404)
             else: 
                 return res
-        # Ordenar por puntos (o el criterio que elijas)
-        return News.objects.order_by('-points')
+        
+        # Ordenar por puntos y excluir las ocultas
+        return News.objects.filter(is_hidden=False).order_by('-points')
         
 
 # Vista de la lista de news
@@ -42,7 +42,8 @@ class NewestListView(ListView):
     context_object_name = 'newest_list'
     
     def get_queryset(self):
-        return News.objects.order_by('-published_date')
+        # Excluir las ocultas
+        return News.objects.filter(is_hidden=False).order_by('-published_date')
 
 class AskListView(ListView):
     model = News
@@ -153,3 +154,18 @@ def logout(request):
     request.session.flush()  
     # Redirigir a la lista de noticias
     return redirect('news:news_list')
+
+@csrf_exempt
+def hide_submission(request, submission_id):
+    user_data = request.session.get('user_data')
+
+    if user_data:
+        news_item = get_object_or_404(News, id=submission_id)
+        news_item.is_hidden = True
+        news_item.save() 
+        
+        # Redirigir a la vista correspondiente
+        next_url = request.GET.get('next', 'news:news_list')  # Valor por defecto si no se proporciona
+        return redirect(next_url)
+
+    return login(request)

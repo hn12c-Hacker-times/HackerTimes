@@ -22,9 +22,9 @@
                         <span class="subtext">
                             {{ news.points }} points by <a href="example.com"> {{ news.author }}</a> 
                             {{ news.published_date|timesince }} ago | 
-                            <a href="example.com"> hide</a> | 
-                            <a href="example.com"> past</a> | 
-                            <a href="example.com"> discuss</a>
+                            <a href="{% url 'news:hide_submission' news.id %}?next=news:newest_news">hide</a> | 
+                            <a href="example.com">past</a> | 
+                            <a href="example.com">discuss</a>
                         </span>
                     </td>
                     </tr>
