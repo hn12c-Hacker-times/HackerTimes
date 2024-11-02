@@ -14,20 +14,30 @@
                                 <td class="titleline">
                                     <img src="/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
                                     <span class="titleline">
-                                        <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a> <span class="comhead">({{ new.urlDomain }}) </span> 
+                                        {% if new.url %}
+                                            <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
+                                            {% if new.urlDomain %}
+                                                <span class="comhead">({{ new.urlDomain }})</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <a href="{% url 'news:ask_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
+                                        {% endif %}
                                     </span>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="subtext">
-                                <span class="subtext">
-                                    {{ new.points }} points by <a href="example.com"> {{ new.author }}</a> 
-                                    {{ new.published_date|timesince }} ago | 
-                                    <a href="example.com"> hide</a> | 
-                                    <a href="example.com"> past</a> | 
-                                    <a href="example.com"> discuss</a>
-                                </span>
-                            </td>
+                                    <span class="subtext">
+                                        {{ news.points }} points by <a href="example.com"> {{ news.author }}</a>
+                                        {{ news.published_date|timesince }} ago |
+                                        <a href="example.com"> hide</a> |
+                                        <a href="example.com"> discuss</a>
+                                        {% if request.session.user_data.name == news.author %}
+                                            | <a href="{% url 'news:edit_news' news.id %}">edit</a>
+                                            | <a href="{% url 'news:delete_news' news.id %}">delete</a>
+                                        {% endif %}
+                                    </span>
+                                </td>
                             </tr>
                             <tr class="spacer" style="height:5px"></tr>
                         </tbody>
