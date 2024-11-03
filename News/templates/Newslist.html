@@ -28,11 +28,11 @@
                             <tr>
                                 <td class="subtext">
                                     <span class="subtext">
-                                        {{ news.points }} points by <a href="example.com"> {{ news.author }}</a>
-                                        {{ news.published_date|timesince }} ago |
+                                        {{ new.points }} points by <a href="example.com"> {{ new.author }}</a>
+                                        {{ new.published_date|timesince }} ago |
                                         <a href="example.com"> hide</a> |
                                         <a href="example.com"> discuss</a>
-                                        {% if request.session.user_data.name == news.author %}
+                                        {% if request.session.user_data.name == new.author %}
                                             | <a href="{% url 'news:edit_news' new.id %}">edit</a>
                                             | <a href="{% url 'news:delete_news' new.id %}">delete</a>
                                         {% endif %}
