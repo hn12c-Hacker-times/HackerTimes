@@ -3,14 +3,8 @@ from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-<<<<<<< HEAD
-from .models import News, Comments, Search
-from .forms import NewsForm
-from .forms import AskNewsForm
-=======
 from .models import News, Comments, Search, CustomUser
-from .forms import NewsForm, UserForm
->>>>>>> 52e5446cc59721a46e7b1bfaf252af827a36c030
+from .forms import NewsForm, UserForm, AskNewsForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from datetime import date, datetime

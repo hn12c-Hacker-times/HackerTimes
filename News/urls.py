@@ -22,11 +22,7 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('comments/', CommentListView.as_view(), name='comments_list'),
     path('search/', SearchListView.as_view(), name='search_list'),
-<<<<<<< HEAD
     path('edit/<int:news_id>/', views.edit_news, name='edit_news'),
     path('delete/<int:news_id>/', views.delete_news, name='delete_news'),
 ]
-=======
-]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
->>>>>>> 52e5446cc59721a46e7b1bfaf252af827a36c030
