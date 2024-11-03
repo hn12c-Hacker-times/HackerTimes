@@ -1,10 +1,10 @@
 from django.shortcuts import render,redirect
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import News, Comments, Search
-from .forms import NewsForm
+from .models import News, Comments, Search, CustomUser
+from .forms import NewsForm, UserForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from datetime import date, datetime
@@ -12,7 +12,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
-import os
+from django.conf import settings
+import os, boto3
 import tldextract
 
 # Create your views here.
@@ -29,7 +30,7 @@ class NewListView(ListView):
             res = News.objects.filter(author=username).order_by('-published_date')
             if not res.exists():
                 return HttpResponse(status=404)
-            else: 
+            else:
                 return res
         # Ordenar por puntos (o el criterio que elijas)
         return News.objects.order_by('-points')
@@ -51,7 +52,7 @@ class AskListView(ListView):
 
     def get_queryset(self):
         # Filtrar los objetos News que no tienen URL
-        return News.objects.filter(url='').order_by('-published_date')     
+        return News.objects.filter(url='').order_by('-published_date')
 
 # Vista de la lista de comments
 class CommentListView(ListView):
@@ -95,10 +96,60 @@ def ask_detail(request, ask_id):
     ask = get_object_or_404(News, id=ask_id)
     return render(request, 'ask_detail.html', {'ask': ask})
 
-def user_profile(request):
+class UserView(View):
+    model = CustomUser
+    template_name = 'user_profile.html'
+    context_object_name = 'user_profile'
     
-    # Pasar la información del usuario al template
-    return render(request, 'user_profile.html')
+    def get(self, request):
+        email = request.session['user_data'].get('email')
+        user_data = request.session['user_data']
+        user = CustomUser.objects.get(email=email)
+        
+        if user:
+            form = UserForm(instance=user)  # Crea el formulario con la instancia del usuario
+            context = {
+                self.context_object_name: user,
+                'form': form,
+                'user_data': user_data
+            }
+            return render(request, self.template_name, context)  # Renderiza el html
+        else:
+            return HttpResponse(status=404)
+    
+    def post(self,request):
+        email = request.session['user_data'].get('email')
+        user = CustomUser.objects.get(email=email)
+        form = UserForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            if request.POST.get('remove_banner'):
+                user.banner = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg'  #Reinicia el campo en el modelo
+                user.save()  #Guarda el usuario después de eliminar los archivos, si es necesario
+                
+            if request.POST.get('remove_avatar'):
+                user.avatar = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/avatars/DefaultProfile_IJlCHTZ.png' #Reinicia el campo en el modelo
+                user.save()
+            
+            if 'banner_file' in request.FILES:
+                banner_file = request.FILES['banner_file']
+                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+                s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
+                user.banner = f'{settings.AWS_S3_CUSTOM_DOMAIN}/banner/{banner_file.name}'  # Guarda la URL
+                user.save()
+
+            if 'avatar_file' in request.FILES:
+                avatar_file = request.FILES['avatar_file']
+                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+                s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
+                user.avatar = f'{settings.AWS_S3_CUSTOM_DOMAIN}/avatar/{avatar_file.name}'  # Guarda la URL
+                user.save()
+            
+            return redirect('news:user_profile')
+
+        else:
+            #Manejo de errores, podrías incluir más información
+            return HttpResponse(status=400)
 
 #LOGIN DE GOOGLE
 
@@ -108,7 +159,7 @@ def submit(request):
 
     username = request.GET.get("username", "")
     if username:
-         return redirect('/?username=' + username)
+        return redirect('/?username=' + username)
     if user_data:
         return create_news(request, user_data)
 
@@ -120,7 +171,7 @@ def create_news(request, user_data):
     if request.method == "POST":
         form = NewsForm(request.POST)
         if form.is_valid():
-            news = form.save(commit=False) 
+            news = form.save(commit=False)
             news.author = user_data['name']
             news.urlDomain =  tldextract.extract(form.cleaned_data.get('url')).domain
             news.save()
@@ -139,6 +190,22 @@ def login(request):
                 user_data = id_token.verify_oauth2_token(
                     token, requests.Request(), os.environ['GOOGLE_OAUTH_CLIENT_ID']
                 )
+                if CustomUser.objects.filter(email=user_data['email']).exists():
+                    user = CustomUser.objects.get(email=user_data['email'])
+                else:
+                    user = CustomUser.objects.create(
+                        username=user_data['given_name'],
+                        email=user_data['email'],
+                        karma=1,
+                        about='',
+                        banner='https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg',
+                        avatar='https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/avatars/DefaultProfile.png',
+                        show_dead=True,
+                        no_procrastinate=False,
+                        max_visit=20,
+                        min_away=180,
+                        delay=0
+                    );
                 request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
                 return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias
             except ValueError:
@@ -148,8 +215,8 @@ def login(request):
 
 def logout(request):
     # Cerrar la sesión del usuario
-    auth_logout(request)  
+    auth_logout(request)
     # Limpiar la sesión
-    request.session.flush()  
+    request.session.flush()
     # Redirigir a la lista de noticias
     return redirect('news:news_list')
