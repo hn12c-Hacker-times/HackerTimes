@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import News, Comments, Search, CustomUser
-from .forms import NewsForm, UserForm
+from .forms import NewsForm, UserForm, AskNewsForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from datetime import date, datetime
@@ -32,7 +32,7 @@ class NewListView(ListView):
                 return HttpResponse(status=404)
             else:
                 return res
-        # Ordenar por puntos (o el criterio que elijas)
+        # Ordenar por puntos
         return News.objects.order_by('-points')
         
 
@@ -181,6 +181,60 @@ def create_news(request, user_data):
     else:
         form = NewsForm()
     return render(request, 'submit.html', {'form': form, 'user_data': user_data})
+
+# Vista de edicion de News
+def edit_news(request, news_id):
+    user_data = request.session.get('user_data')
+    if not user_data:
+        return redirect('news:login')
+        
+    news = get_object_or_404(News, id=news_id)
+    
+    # Verificar que el usuario actual es el autor
+    if news.author != user_data['name']:
+        return HttpResponse(status=403)  # Forbidden
+    
+    # Determinar si es un ask post (url vacía)
+    is_ask = not news.url
+    
+    if request.method == "POST":
+        form = AskNewsForm(request.POST, instance=news) if is_ask else NewsForm(request.POST, instance=news)
+        if form.is_valid():
+            news = form.save(commit=False)
+            if not is_ask:
+                news.urlDomain = tldextract.extract(form.cleaned_data.get('url')).domain
+            news.save()
+            if is_ask:
+                return redirect('news:ask_list')
+            return redirect('news:news_list')
+    else:
+        form = AskNewsForm(instance=news) if is_ask else NewsForm(instance=news)
+    
+    return render(request, 'edit_news.html', {
+        'form': form, 
+        'user_data': user_data,
+        'is_ask': is_ask,
+        'news': news  # Añadimos el objeto news al contexto
+    })
+
+# Vista de borrado de News
+def delete_news(request, news_id):
+    user_data = request.session.get('user_data')
+    if not user_data:
+        return redirect('news:login')
+        
+    news = get_object_or_404(News, id=news_id)
+    
+    # Verificar que el usuario actual es el autor
+    if news.author != user_data['name']:
+        return HttpResponse(status=403)  # Forbidden
+        
+    if request.method == "POST":
+        news.delete()
+        return redirect('news:news_list')
+        
+    return render(request, 'delete_confirmation.html', {'news': news, 'user_data': user_data})
+
 
 def login(request):
     if request.method == "POST":
