@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} | HackerTimes{% endblock %}
+{% block content %}
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
+  <tbody>
+    <tr>
+      <td class="titleline">
+        <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+        {% if item.url %}
+          <a href="{{ item.url }}" style="color:#000000">{{ item.title }}</a>
+          {% if item.urlDomain %}
+            <span class="comhead">({{ item.urlDomain }})</span>
+          {% endif %}
+        {% else %}
+          <span style="color:#000000">{{ item.title }}</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td class="subtext">
+        <span class="subtext">
+          {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ item.author }}">{{ item.author }}</a>
+          {{ item.published_date|timesince }} ago
+          {% if request.session.user_data.name == item.author %}
+            | <a href="{% url 'news:edit_news' item.id %}">edit</a>
+            | <a href="{% url 'news:delete_news' item.id %}">delete</a>
+          {% endif %}
+        </span>
+      </td>
+    </tr>
+    {% if item.text %}
+    <tr>
+      <td class="comment-content" style="padding: 10px 0 10px 40px;">
+        {{ item.text }}
+      </td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+
+{% if user_data %}
+<form method="post" style="margin: 20px 0 0 40px">
+  {% csrf_token %}
+  <textarea name="text" rows="6" cols="60" required></textarea>
+  <br><br>
+  <input type="submit" value="add comment">
+</form>
+{% else %}
+<p style="margin-left: 40px"><a href="{% url 'news:login' %}">Login</a> to comment.</p>
+{% endif %}
+
+{% if comments %}
+<br>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 10px 0;">
+  {% for comment in comments %}
+  {% if not comment.parent %}  {# Solo mostrar comentarios principales #}
+  <tr>
+    <td style="padding-left: 40px;">
+      <div class="comhead" style="color: #828282; margin-bottom: 6px;">
+        <a href="{% url 'news:user_profile' %}?username={{ comment.author }}" style="color: #828282">{{ comment.author }}</a>
+        {{ comment.published_date|timesince }} ago
+      </div>
+      <div class="comment-text" style="margin-bottom: 15px;">
+        {{ comment.text }}
+      </div>
+      {% if user_data %}
+      <div style="margin: -10px 0 15px 0">
+        <a href="javascript:void(0)" onclick="showReplyForm('{{ comment.id }}')" style="color: #828282">reply</a>
+      </div>
+      <form id="replyform-{{ comment.id }}" method="post" style="display: none; margin: 10px 0 15px 40px;">
+        {% csrf_token %}
+        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+        <textarea name="text" rows="6" cols="60" required></textarea>
+        <br><br>
+        <input type="submit" value="reply">
+      </form>
+      {% endif %}
+      
+      {# Mostrar respuestas a este comentario #}
+      {% for reply in comment.replies.all %}
+      <div style="margin-left: 40px; margin-top: 10px;">
+        <div class="comhead" style="color: #828282; margin-bottom: 6px;">
+          <a href="{% url 'news:user_profile' %}?username={{ reply.author }}" style="color: #828282">{{ reply.author }}</a>
+          {{ reply.published_date|timesince }} ago
+        </div>
+        <div class="comment-text" style="margin-bottom: 15px;">
+          {{ reply.text }}
+        </div>
+        {% if user_data %}
+        <div style="margin: -10px 0 15px 0">
+          <a href="javascript:void(0)" onclick="showReplyForm('{{ reply.id }}')" style="color: #828282">reply</a>
+        </div>
+        <form id="replyform-{{ reply.id }}" method="post" style="display: none; margin: 10px 0 15px 40px;">
+          {% csrf_token %}
+          <input type="hidden" name="parent_id" value="{{ reply.id }}">
+          <textarea name="text" rows="6" cols="60" required></textarea>
+          <br><br>
+          <input type="submit" value="reply">
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% endfor %}
+</table>
+{% endif %}
+
+<script>
+function showReplyForm(commentId) {
+    const form = document.getElementById('replyform-' + commentId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %}
