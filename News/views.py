@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import News, Comments, Search, CustomUser
-from .forms import NewsForm, UserForm, AskNewsForm
+from .forms import NewsForm, UserForm, AskNewsForm, CommentForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from datetime import date, datetime
@@ -235,6 +235,37 @@ def delete_news(request, news_id):
         
     return render(request, 'delete_confirmation.html', {'news': news, 'user_data': user_data})
 
+# Vista de la noticia i su campo de creacion de comentario
+def item_detail(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    comments = Comments.objects.filter(New=news).order_by('-published_date')
+    
+    if request.method == "POST":
+        if not request.session.get('user_data'):
+            return redirect('news:login')
+            
+        text = request.POST.get('text')
+        parent_id = request.POST.get('parent_id')
+        
+        if text:
+            author = CustomUser.objects.get(email=request.session['user_data']['email'])
+            parent = None
+            if parent_id:
+                parent = get_object_or_404(Comments, id=parent_id)
+                
+            Comments.objects.create(
+                text=text,
+                author=author,
+                New=news,
+                parent=parent
+            )
+            return redirect('news:item_detail', news_id=news_id)
+    
+    return render(request, 'item_detail.html', {
+        'item': news,
+        'comments': comments,
+        'user_data': request.session.get('user_data')
+    })
 
 def login(request):
     if request.method == "POST":

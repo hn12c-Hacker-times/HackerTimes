@@ -1,5 +1,5 @@
 from django import forms
-from .models import News, CustomUser  # Asegúrate de importar tu modelo News
+from .models import News, CustomUser, Comments  # Asegúrate de importar tu modelo News
 
 class NewsForm(forms.ModelForm):
     class Meta:
@@ -22,3 +22,11 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = ['about']  # Especifica los campos que quieres incluir en el formulario
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comments
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={'rows': 4, 'cols': 60}),
+        }

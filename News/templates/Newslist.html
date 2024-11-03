@@ -20,7 +20,7 @@
                                                 <span class="comhead">({{ new.urlDomain }})</span>
                                             {% endif %}
                                         {% else %}
-                                            <a href="{% url 'news:ask_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
+                                            <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
                                         {% endif %}
                                     </span>
                                 </td>
@@ -31,7 +31,15 @@
                                         {{ new.points }} points by <a href="example.com"> {{ new.author }}</a>
                                         {{ new.published_date|timesince }} ago |
                                         <a href="example.com"> hide</a> |
-                                        <a href="example.com"> discuss</a>
+                                        <a href="{% url 'news:item_detail' new.id %}">
+                                            {% with comment_count=new.comments_set.count %}
+                                                {% if comment_count == 0 %}
+                                                    discuss
+                                                {% else %}
+                                                    {{ comment_count }} comment{{ comment_count|pluralize }}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </a>
                                         {% if request.session.user_data.name == new.author %}
                                             | <a href="{% url 'news:edit_news' new.id %}">edit</a>
                                             | <a href="{% url 'news:delete_news' new.id %}">delete</a>
