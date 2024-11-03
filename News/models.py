@@ -5,10 +5,13 @@ from django.contrib.auth.models import AbstractUser
 
 # Modelo de usuario personalizado
 class CustomUser(models.Model):
-    username = models.CharField(max_length=150, unique=True)  # Campo de nombre de usuario
+    username = models.CharField(max_length=150)  # Campo de nombre de usuario
+    email = models.EmailField(primary_key=True, max_length=254)
     created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
     karma = models.PositiveIntegerField(default=0)  # Karma del usuario
     about = models.TextField(blank=True, null=True)  # Información sobre el usuario
+    banner = models.ImageField(default='banners/DefaultBanner.jpg', upload_to='banners/', blank=True, null=True)  # Banner del usuario
+    avatar = models.ImageField(upload_to='avatars/', default='avatars/DefaultProfile.png',blank=True, null=True)  # Avatar del usuario
     show_dead = models.BooleanField(default=True)  # Mostrar elementos "muertos"
     no_procrastinate = models.BooleanField(default=False)  # Opción de "no procrastinar"
     max_visit = models.PositiveIntegerField(default=20)  # Máximo de visitas
@@ -16,7 +19,7 @@ class CustomUser(models.Model):
     delay = models.PositiveIntegerField(default=0)  # Retraso en la actividad
 
     def __str__(self):
-        return self.username
+        return self.email
 
 class News(models.Model):
     title = models.CharField(max_length=200)

@@ -9,7 +9,7 @@ load_dotenv()
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
 if not GOOGLE_OAUTH_CLIENT_ID:
     raise ValueError(
-        'GOOGLE_OAUTH_CLIENT_ID is missing.' 
+        'GOOGLE_OAUTH_CLIENT_ID is missing.'
         'Have you put it in a file at core/.env ?'
     )
 
@@ -32,6 +32,7 @@ SECRET_KEY = 'django-insecure-&r5%tl8g52!zxo8bgn%6d1lb%a76tfx86o$#lokq5vv()2ik9d
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
@@ -127,11 +128,26 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 STATICFILES_DIRS = [
     BASE_DIR / "static/",
 ]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#Estas claves se tienen que actualizar cada 4 horas y las pongo publicas de momento pq esta el server down, el repo es privado y no debería de haber problema :)
+AWS_ACCESS_KEY_ID = "ASIAVLRKON4XKBWGUGVO"
+AWS_SECRET_ACCESS_KEY = "cLfiZmxc33qlkZO4tkRjLVN/+zTvNOj9LlFpjBgL"
+AWS_SESSION_TOKEN = "IQoJb3JpZ2luX2VjEFwaCXVzLXdlc3QtMiJHMEUCIFGBLJDfNskQsiFcbykpYPX4K/lbg6z0l/uislKZyUm8AiEA3iYZmctg7uwUrP0S9XN9WegoxvFucUlQfPRwXlwNrZEqxgII1f//////////ARABGgwzNjgzODI0NzE5ODIiDDa3rAJbruVzOcCPViqaAsNPlTXlguqzXxWiuCiyDgVfO6ajnVff15lXowWHbyMXElReiDihZ1Wo1YtKdCd8YNeXZziTIn+vnzY5YC69H5NPClPikU6pXN5ULdNtmIivtyc3I99/jwloLtYEvkipmkvwB6p4YoL4AT+7hrc5zeukyACpoEKu3LHygbdWN51fTBz5laMeEZZN8fc+gWd/G29QRvi5HgqQSyV4bms8VMd5TTvYbrG1m/N/LMAycfSvsRNqAbDdm2e7VwFvQlsvHV/Z/2lhk4+vgXo0IDQLh2pe7uM28PKuCmSm4sUTSny6lGsn2X7gZ7CfWZeBb2ryRaKVGWF2WlwzfZ5wE3vvPwYIdmpqRKYnSvdtoFnBp5jOg5h0S9R0ouVRbTCOwZ25BjqdATkS2l40lpT1fANtKvwu4z/RJ1F6bX9PRxsXogSg3YzmU/qmqmLukOmP5GTlg6r7eLGXPXakyyPJ+ZUgplxU8nNnr0MkRdInBS61cJCRqqcuUFyg7X6AvpYIVRMxgt+5XJM1VRIaQgtO6YtBjoS+p/qiWmNvmapAqaaVudmBdVC5OXtUR+/ejqeUd723xKF7xtkTV0r3vMhbjeaANW0="
+AWS_STORAGE_BUCKET_NAME = "hn12c-hackertimes"
+AWS_S3_REGION_NAME = "us-east-1"
+
+# Opcional: dominio personalizado (si lo usas)
+AWS_S3_CUSTOM_DOMAIN = f'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com'

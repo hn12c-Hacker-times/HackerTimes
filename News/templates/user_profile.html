@@ -10,36 +10,71 @@
             <tr id="pagespace" title="" style="height:10px"></tr>
             <tr>
                 <td>
-                    <table border="0">
-                        <tbody>
-                            <tr class="athing">
-                                <td valign="top">user:</td>
-                                <td timestamp="1557689318">
-                                    <a href="/user/?username={{ request.session.user_data.name }}" class="hnuser">{{ request.session.user_data.name }}</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign="top">created:</td>
-                                <td>
-                                   {{ request.session.user_data.created_at }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign="top">karma:</td>
-                                <td>{{ user.karma }}</td>
-                            </tr>
-                            <tr>
-                                <td valign="top">about:</td>
-                                <td style="overflow:hidden"></td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>
-                                    <a href="/?id={{ request.session.user_data.name }}"><u>submissions</u></a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <table border="0" style="table-layout: auto;">
+                            {% load static %}
+                            {% if user_profile %}
+                            <tbody>
+                                <tr class="athing">
+                                    <div>
+                                        <img src="{{user_profile.banner}}" width="118%" height="100"  align="center" valign="center" style="border:0px; margin:3px 2px 6px;">
+                                        <img src="{{ user_profile.avatar}}" width="100" height="100" style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%); border: 4px solid #FFFFFF; border-radius: 50%; background-color: #f0f0f0;" alt="Perfil">
+                                    </div>
+                                </tr>
+                                <tr class="spacer" style="height:50px"></tr>
+
+                                <tr>
+                                    <td valign="top">banner:</td>
+                                    <td valign="top">
+                                        <input type="checkbox" name="remove_banner">&nbsp delete &nbsp&nbsp OR &nbsp&nbsp&nbsp <input type="file" name="banner_file">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">avatar:</td>
+                                    <td>
+                                        <input type="checkbox" name="remove_avatar">&nbsp delete &nbsp&nbsp OR &nbsp&nbsp&nbsp <input type="file" name="avatar_file">
+                                    </td>
+                                </tr>
+                                <tr class="athing">
+                                    <td valign="top">user:</td>
+                                    <td timestamp="1557689318">
+                                        <a href="/user/?username={{ request.session.user_data.name }}" class="hnuser">{{ user_profile.username }}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">created:</td>
+                                    <td>
+                                        {{ user_profile.created_at }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">karma:</td>
+                                    <td>{{ user_profile.karma }}</td>
+                                </tr>
+                                <tr>
+                                    <td valign="top">about:</td>
+                                    <td>
+                                        <textarea name="about" rows="6" cols="100%" wrap="virtual">{{user_profile.about}}
+                                        </textarea>
+                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="/?id={{ request.session.user_data.name }}"><u>submissions</u></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input type="submit" value="Update">
+                                    </td>
+                                </tr>
+                            </tbody>
+                            {%endif%}
+                        </table>
+                    </form>
                     <br><br>
                 </td>
             </tr>
