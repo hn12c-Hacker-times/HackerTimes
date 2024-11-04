@@ -305,3 +305,10 @@ def logout(request):
     request.session.flush()
     # Redirigir a la lista de noticias
     return redirect('news:news_list')
+
+class CustomUserDetailView(DetailView):
+    model = CustomUser
+    template_name = 'user.html'
+    context_object_name = 'user'
+    slug_field = 'email'
+    slug_url_kwarg = 'email'
