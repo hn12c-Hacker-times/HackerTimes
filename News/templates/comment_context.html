@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Comment Context{% endblock %}
+{% block content %}
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
+  <tr>
+    <td style="padding-left: 0;">
+      <!-- Mostrar el comentario padre -->
+      <div class="comhead" style="color: #828282; margin-bottom: 6px;">
+        <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+        <a href="{% url 'news:user_profile' %}?username={{ parent_comment.author.username }}" style="color: #828282">{{ parent_comment.author.username }}</a>
+        {{ parent_comment.published_date|timesince }} ago |
+        <a href="{% url 'news:item_detail' news.id %}" style="color:#828282">on: {{ news.title }}</a>
+      </div>
+      <div class="comment-text" style="margin: 20px 0 0 40px; color: black;">
+        {{ parent_comment.text }}
+      </div>
+      {% if user_data %}
+      <form method="post" style="margin: 20px 0 0 40px" action="{% url 'news:item_detail' news.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="parent_id" value="{{ parent_comment.id }}">
+        <textarea name="text" rows="6" cols="60" required></textarea>
+        <br><br>
+        <input type="submit" value="reply">
+      </form>
+      {% endif %}
+
+      <!-- Mostrar las respuestas -->
+      {% if replies %}
+      <br>
+      <div style="margin-left: 40px">
+        {% for reply in replies %}
+        <div style="margin-bottom: 15px;">
+          <div class="comhead" style="color: #828282; margin-bottom: 6px;">
+            <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+            <a href="{% url 'news:user_profile' %}?username={{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a>
+            {{ reply.published_date|timesince }} ago
+            {% if user_data.given_name == reply.author.username %}
+              | <a href="{% url 'news:edit_comment' reply.id %}">edit</a>
+              | <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')">delete</a>
+            {% endif %}
+          </div>
+          <div class="comment-text" style="color: black;">
+            {{ reply.text }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

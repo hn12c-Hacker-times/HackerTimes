@@ -1,0 +1,31 @@
+{% for reply in comment.replies.all %}
+<div style="margin-left: 40px; margin-top: 10px;">
+    <div class="comhead" style="color: #828282; margin-bottom: 6px;">
+        {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a>
+        {{ reply.published_date|timesince }} ago
+        {% if request.session.user_data.given_name == reply.author.username %}
+            | <a href="{% url 'news:edit_comment' reply.id %}">edit</a>
+            | <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
+        {% endif %}
+    </div>
+    <div id="comment-text-{{ reply.id }}" class="comment-text" style="margin-bottom: 15px;">
+        {{ reply.text }}
+    </div>
+    {% if user_data %}
+    <div style="margin: -10px 0 15px 0">
+        <a href="javascript:void(0)" onclick="showReplyForm('{{ reply.id }}')" style="color: #828282">reply</a>
+    </div>
+    <form id="replyform-{{ reply.id }}" method="post" style="display: none; margin: 10px 0 15px 40px;">
+        {% csrf_token %}
+        <input type="hidden" name="parent_id" value="{{ reply.id }}">
+        <textarea name="text" rows="6" cols="60" required></textarea>
+        <br><br>
+        <input type="submit" value="reply">
+    </form>
+    {% endif %}
+    
+    {% with comment=reply template_name="comment_tree.html" %}
+        {% include template_name %}
+    {% endwith %}
+</div>
+{% endfor %}

@@ -272,6 +272,19 @@ def item_detail(request, news_id):
         'comments': comments,
         'user_data': request.session.get('user_data')
     })
+    
+# Funcionalidad parent
+def comment_context(request, news_id, comment_id):
+    news = get_object_or_404(News, id=news_id)
+    parent_comment = get_object_or_404(Comments, id=comment_id)
+    replies = Comments.objects.filter(parent=parent_comment).order_by('-published_date')
+    
+    return render(request, 'comment_context.html', {
+        'news': news,
+        'parent_comment': parent_comment,
+        'replies': replies,
+        'user_data': request.session.get('user_data')
+    })
 
 def edit_comment(request, comment_id):
     comment = get_object_or_404(Comments, id=comment_id)
