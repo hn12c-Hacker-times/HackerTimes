@@ -28,7 +28,7 @@
                             <tr>
                                 <td class="subtext">
                                     <span class="subtext">
-                                        {{ new.points }} points by <a href="example.com"> {{ new.author }}</a>
+                                        {{ new.points }} points by <a href="{% url 'news:user_profile' %}?username={{ new.author.username }}"> {{ new.author.username }}</a>
                                         {{ new.published_date|timesince }} ago |
                                         <a href="example.com"> hide</a> |
                                         <a href="{% url 'news:item_detail' new.id %}">
@@ -40,7 +40,7 @@
                                                 {% endif %}
                                             {% endwith %}
                                         </a>
-                                        {% if request.session.user_data.name == new.author %}
+                                        {% if request.session.user_data.given_name == new.author.username %}
                                             | <a href="{% url 'news:edit_news' new.id %}">edit</a>
                                             | <a href="{% url 'news:delete_news' new.id %}">delete</a>
                                         {% endif %}

@@ -41,7 +41,7 @@
                                         </form>
                                         {% if request.session.user_data %}
                                             <span class="pagetop">
-                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> |  <!-- Muestra el nombre de usuario -->
+                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.given_name }}</a> |  <!-- Muestra el nombre de usuario -->
                                                 <a href="{% url 'news:logout' %}">logout</a>
                                             </span>
                                         {% else %}

@@ -26,7 +26,7 @@ class News(models.Model):
     url = models.URLField(max_length=200, blank=True)
     urlDomain = models.CharField(max_length=200)
     text = models.TextField(max_length=200, blank=True)
-    author = models.CharField(max_length=100)
+    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     published_date = models.DateTimeField(auto_now=True)
     points = models.IntegerField(default=0) 
 

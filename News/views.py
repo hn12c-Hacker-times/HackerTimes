@@ -27,11 +27,13 @@ class NewListView(ListView):
 
         username = self.request.GET.get("username", "")
         if username:
-            res = News.objects.filter(author=username).order_by('-published_date')
-            if not res.exists():
-                return HttpResponse(status=404)
-            else:
-                return res
+            author = CustomUser.objects.filter(username=username).first()
+            if author: 
+                res = News.objects.filter(author=username).order_by('-published_date')
+                if not res.exists():
+                    return HttpResponse(status=404)
+                else:
+                    return res
         # Ordenar por puntos
         return News.objects.order_by('-points')
         
@@ -172,10 +174,11 @@ def create_news(request, user_data):
         form = NewsForm(request.POST)
         if form.is_valid():
             news = form.save(commit=False)
-            news.author = user_data['name']
-            news.urlDomain =  tldextract.extract(form.cleaned_data.get('url')).domain
+            # Obtener el objeto CustomUser en lugar de solo el nombre
+            author = CustomUser.objects.get(email=user_data['email'])
+            news.author = author  # Asignar el objeto CustomUser
+            news.urlDomain = tldextract.extract(form.cleaned_data.get('url')).domain
             news.save()
-            print("*" + news.urlDomain + "*")
             if news.urlDomain == "": return redirect('news:ask_list')
             return redirect('news:news_list')  # Redirige a la página 'newest'
     else:
@@ -190,8 +193,9 @@ def edit_news(request, news_id):
         
     news = get_object_or_404(News, id=news_id)
     
+    author = CustomUser.objects.get(email=user_data['email'])
     # Verificar que el usuario actual es el autor
-    if news.author != user_data['name']:
+    if news.author != author:
         return HttpResponse(status=403)  # Forbidden
     
     # Determinar si es un ask post (url vacía)
@@ -225,8 +229,9 @@ def delete_news(request, news_id):
         
     news = get_object_or_404(News, id=news_id)
     
+    author = CustomUser.objects.get(email=user_data['email'])
     # Verificar que el usuario actual es el autor
-    if news.author != user_data['name']:
+    if news.author != author:
         return HttpResponse(status=403)  # Forbidden
         
     if request.method == "POST":
@@ -248,6 +253,7 @@ def item_detail(request, news_id):
         parent_id = request.POST.get('parent_id')
         
         if text:
+            author_name = request.session['user_data']['name']
             author = CustomUser.objects.get(email=request.session['user_data']['email'])
             parent = None
             if parent_id:
@@ -255,7 +261,7 @@ def item_detail(request, news_id):
                 
             Comments.objects.create(
                 text=text,
-                author=author,
+                author= CustomUser.objects.get(email=request.session['user_data']['email']),
                 New=news,
                 parent=parent
             )
@@ -266,6 +272,36 @@ def item_detail(request, news_id):
         'comments': comments,
         'user_data': request.session.get('user_data')
     })
+
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comments, id=comment_id)
+    news = comment.New  # Obtener la noticia asociada al comentario
+    
+    if not request.session.get('user_data') or request.session['user_data']['given_name'] != comment.author.username:
+        return HttpResponse(status=403)
+        
+    if request.method == "POST":
+        text = request.POST.get('text')
+        if text:
+            comment.text = text
+            comment.save()
+        return redirect('news:item_detail', news_id=news.id)
+    
+    return render(request, 'edit_comment.html', {
+        'comment': comment,
+        'news': news,
+        'user_data': request.session.get('user_data')
+    })
+
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comments, id=comment_id)
+    
+    if not request.session.get('user_data') or request.session['user_data']['email'] != comment.author.email:
+        return HttpResponse(status=403)
+        
+    news_id = comment.New.id
+    comment.delete()
+    return redirect('news:item_detail', news_id=news_id)
 
 def login(request):
     if request.method == "POST":
