@@ -20,7 +20,7 @@
                     <tr>
                         <td class="subtext">
                             <span class="subtext">
-                                {{ ask.points }} points by <a href="example.com">{{ ask.author }}</a> 
+                                {{ ask.points }} points by <a href="{% url 'news:user_profile' %}?username={{ ask.author.username }}">{{ ask.author.username }}</a> 
                                 {{ ask.published_date|timesince }} ago | 
                                 <a href="example.com"> hide</a> | 
                                 <a href="example.com"> past</a> | 

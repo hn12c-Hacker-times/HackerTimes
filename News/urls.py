@@ -25,5 +25,7 @@ urlpatterns = [
     path('edit/<int:news_id>/', views.edit_news, name='edit_news'),
     path('delete/<int:news_id>/', views.delete_news, name='delete_news'),
     path('item/<int:news_id>/', views.item_detail, name='item_detail'),
+    path('comment/edit/<int:comment_id>/', views.edit_comment, name='edit_comment'),
+    path('comment/delete/<int:comment_id>/', views.delete_comment, name='delete_comment'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
