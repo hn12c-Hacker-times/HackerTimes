@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.views.generic import ListView
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +12,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
+from django.contrib import messages 
 import os
 import tldextract
 
@@ -97,9 +98,24 @@ def ask_detail(request, ask_id):
     return render(request, 'ask_detail.html', {'ask': ask})
 
 def user_profile(request):
+    user_data = request.session.get('user_data')
     
-    # Pasar la información del usuario al template
-    return render(request, 'user_profile.html')
+    if user_data:
+        hidden_news = News.objects.filter(is_hidden=True, author=user_data['name'])
+        hidden_count = hidden_news.count()  # Contar el total de noticias ocultas
+        
+        # Mensaje para el terminal al cargar el perfil
+        print(f"Tienes {hidden_count} noticias ocultas.")  # Esto aparecerá en la terminal
+        
+        # Pasar la información del usuario al template
+        return render(request, 'user_profile.html', {
+            'hidden_news': hidden_news,
+            'hidden_count': hidden_count,
+            'user': request.user  # Asegúrate de pasar el objeto usuario si lo necesitas
+        })
+
+    return render(request, 'sign_in.html')  # Redirige a la página de login si no hay datos de usuario
+
 
 #LOGIN DE GOOGLE
 
@@ -112,7 +128,6 @@ def submit(request):
          return redirect('/?username=' + username)
     if user_data:
         return create_news(request, user_data)
-
 
     return login(request)
 
@@ -164,8 +179,37 @@ def hide_submission(request, submission_id):
         news_item.is_hidden = True
         news_item.save() 
         
+        # Mensaje en consola
+        print(f"La noticia \"{news_item.title}\" ha sido ocultada.")
+        
         # Redirigir a la vista correspondiente
         next_url = request.GET.get('next', 'news:news_list')  # Valor por defecto si no se proporciona
         return redirect(next_url)
+
+    return login(request)
+
+def hidden_submissions(request):
+    user_data = request.session.get('user_data')
+    if user_data:
+        # Obtener las noticias ocultas del usuario
+        hidden_news = News.objects.filter(is_hidden=True, author=user_data['name'])
+        return render(request, 'hidden_submissions.html', {'hidden_news': hidden_news})
+
+    return redirect('news:sign_in')  # Redirigir si no hay datos de usuario
+
+@csrf_exempt
+def unhide_submission(request, submission_id):
+    user_data = request.session.get('user_data')
+
+    if user_data:
+        news_item = get_object_or_404(News, id=submission_id)
+        news_item.is_hidden = False
+        news_item.save() 
+        
+        # Mensaje en la terminal
+        print(f"La noticia \"{news_item.title}\" ha sido desocultada.")
+        
+        # Redirigir a la vista correspondiente
+        return redirect('news:hidden_submissions')  # Redirigir a la vista de hidden submissions
 
     return login(request)

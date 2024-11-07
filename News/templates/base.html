@@ -4,8 +4,7 @@
     {% load static %}
     <meta name="referrer" content="origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--<link rel="stylesheet" type="text/css" href="static/news.css"> --> 
-    <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
+    <link rel="stylesheet" type='text/css' href="{% static 'news.css' %}">
     <link rel="icon" href="y18.svg">
     <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
     <title>Hacker News</title>
@@ -31,7 +30,10 @@
                                             <a href="front">threads</a> | 
                                             <a href="{% url 'news:comments_list' %}">comments</a> | 
                                             <a href="{% url 'news:ask_list' %}">ask</a> | 
-                                            <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a>
+                                            <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a> 
+                                            {% if request.path == '/hidden/' %}  <!-- Mostrar solo si estamos en hidden -->
+                                                | <a href="{% url 'news:hidden_submissions' %}" class="active" style="color: white;">hidden</a>
+                                            {% endif %}
                                         </span>
                                     </td>
                                     <td style="text-align:right;padding-right:4px;">

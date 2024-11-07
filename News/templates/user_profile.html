@@ -15,13 +15,13 @@
                             <tr class="athing">
                                 <td valign="top">user:</td>
                                 <td timestamp="1557689318">
-                                    <a href="/user/?username={{ request.session.user_data.name }}" class="hnuser">{{ request.session.user_data.name }}</a>
+                                    <a href="/user/?username={{ user_data.name }}" class="hnuser">{{ user_data.name }}</a>
                                 </td>
                             </tr>
                             <tr>
                                 <td valign="top">created:</td>
                                 <td>
-                                   {{ request.session.user_data.created_at }}
+                                   {{ user_data.created_at }}
                                 </td>
                             </tr>
                             <tr>
@@ -35,9 +35,17 @@
                             <tr>
                                 <td></td>
                                 <td>
-                                    <a href="/?id={{ request.session.user_data.name }}"><u>submissions</u></a>
+                                    <a href="/?id={{ user_data.name }}"><u>submissions</u></a>
                                 </td>
                             </tr>
+                            {% if hidden_count > 0 %}
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:hidden_submissions' %}"><u>hidden</u></a>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                     <br><br>
