@@ -10,8 +10,8 @@ class CustomUser(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
     karma = models.PositiveIntegerField(default=0)  # Karma del usuario
     about = models.TextField(blank=True, null=True)  # Información sobre el usuario
-    banner = models.ImageField(default='banners/DefaultBanner.jpg', upload_to='banners/', blank=True, null=True)  # Banner del usuario
-    avatar = models.ImageField(upload_to='avatars/', default='avatars/DefaultProfile.png',blank=True, null=True)  # Avatar del usuario
+    banner = models.URLField(default='https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg')  # Banner del usuario
+    avatar = models.URLField(default = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/avatars/DefaultProfile.png')  # Avatar del usuario
     show_dead = models.BooleanField(default=True)  # Mostrar elementos "muertos"
     no_procrastinate = models.BooleanField(default=False)  # Opción de "no procrastinar"
     max_visit = models.PositiveIntegerField(default=20)  # Máximo de visitas

@@ -27,10 +27,10 @@
                         </td  -->
                         
                         <td style="padding: 0; margin: 0; border: none; display: inline-block;">
-                            <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
                             <span class="comhead" style="padding: 0; margin: 0;">
-                                <a href="/user/?username={{ comment.author.username }}" style="color:#828282">{{ comment.author.username }}</a> 
-                                {{ comment.published_date|timesince }} ago  | 
+                                <a href="/user/?username={{ comment.author.username }}" style="color:#828282">{{ comment.author.username }}</a>
+                                {{ comment.published_date|timesince }} ago  |
                                 {% if comment.parent %}
                                     <a href="{% url 'news:comment_context' comment.New.id comment.parent.id %}" style="color:#828282"> parent </a>
                                 {% else %}
@@ -43,7 +43,7 @@
                     </tr>
                     <tr>
                         <td class="titleline" style="padding: 0; margin: 0; border: none;">
-                         <span class="titleline" style="padding: 0; margin: 0; color:black;">
+                        <span class="titleline" style="padding: 0; margin: 0; color:black;">
                             &nbsp&nbsp&nbsp  {{ comment.text }}
                         </span>
                     </td>
