@@ -10,23 +10,40 @@
                 <tbody>
                     <tr>
                         <td class="titleline">
-                            <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
                             <span class="titleline">
-                                <a href="{{ news.url }}" style="color:#000000">{{ news.title }}</a> 
-                                <span class="comhead">({{ news.urlDomain }}) </span> 
+                                {% if news.url %}
+                                    <a href="{{ news.url }}" style="color:#000000">{{ news.title }}</a>
+                                    {% if news.urlDomain %}
+                                        <span class="comhead">({{ news.urlDomain }})</span>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'news:item_detail' news.id %}" style="color:#000000">{{ news.title }}</a>
+                                {% endif %} 
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <td class="subtext">
-                        <span class="subtext">
-                            {{ news.points }} points by <a href="example.com"> {{ news.author }}</a> 
-                            {{ news.published_date|timesince }} ago | 
-                            <a href="{% url 'news:hide_submission' news.id %}?next=news:newest_news">hide</a> | 
-                            <a href="example.com">past</a> | 
-                            <a href="example.com">discuss</a>
-                        </span>
-                    </td>
+                            <span class="subtext">
+                                {{ news.points }} points by <a href="{% url 'news:user_profile' %}?username={{ news.author.username }}"> {{ news.author.username }}</a>
+                                {{ news.published_date|timesince }} ago |
+                                <a href="{% url 'news:hide_submission' news.id %}?next=news:newest_news">hide</a> | 
+                                <a href="{% url 'news:item_detail' news.id %}">
+                                    {% with comment_count=news.comments_set.count %}
+                                        {% if comment_count == 0 %}
+                                            discuss
+                                        {% else %}
+                                            {{ comment_count }} comment{{ comment_count|pluralize }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </a>
+                                {% if request.session.user_data.given_name == news.author.username %}
+                                    | <a href="{% url 'news:edit_news' news.id %}">edit</a>
+                                    | <a href="{% url 'news:delete_news' news.id %}">delete</a>
+                                {% endif %}
+                            </span>
+                        </td>
                     </tr>
                     <tr class="spacer" style="height:5px"></tr>
                 </tbody>

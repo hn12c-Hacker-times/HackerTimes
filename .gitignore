@@ -1,3 +1,7 @@
 #enviroment directory
 .env
+<<<<<<< HEAD
 venv/
+=======
+__pycache__/
+>>>>>>> develop

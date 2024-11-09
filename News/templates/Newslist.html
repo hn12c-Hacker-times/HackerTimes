@@ -12,22 +12,40 @@
                         <tbody>
                             <tr>
                                 <td class="titleline">
-                                    <img src="/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                                    <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
                                     <span class="titleline">
-                                        <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a> <span class="comhead">({{ new.urlDomain }}) </span> 
+                                        {% if new.url %}
+                                            <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
+                                            {% if new.urlDomain %}
+                                                <span class="comhead">({{ new.urlDomain }})</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
+                                        {% endif %}
                                     </span>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="subtext">
-                                <span class="subtext">
-                                    {{ new.points }} points by <a href="example.com"> {{ new.author }}</a> 
-                                    {{ new.published_date|timesince }} ago | 
-                                    <a href="{% url 'news:hide_submission' new.id %}">hide</a> | 
-                                    <a href="example.com"> past</a> | 
-                                    <a href="example.com"> discuss</a>
-                                </span>
-                            </td>
+                                    <span class="subtext">
+                                        {{ new.points }} points by <a href="{% url 'news:user_profile' %}?username={{ new.author.username }}"> {{ new.author.username }}</a>
+                                        {{ new.published_date|timesince }} ago |
+                                        <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
+                                        <a href="{% url 'news:item_detail' new.id %}">
+                                            {% with comment_count=new.comments_set.count %}
+                                                {% if comment_count == 0 %}
+                                                    discuss
+                                                {% else %}
+                                                    {{ comment_count }} comment{{ comment_count|pluralize }}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </a>
+                                        {% if request.session.user_data.given_name == new.author.username %}
+                                            | <a href="{% url 'news:edit_news' new.id %}">edit</a>
+                                            | <a href="{% url 'news:delete_news' new.id %}">delete</a>
+                                        {% endif %}
+                                    </span>
+                                </td>
                             </tr>
                             <tr class="spacer" style="height:5px"></tr>
                         </tbody>

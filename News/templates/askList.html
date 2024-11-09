@@ -10,21 +10,29 @@
                 <tbody>
                     <tr>
                         <td class="titleline">
-                            <img src="/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
                             <span class="titleline">
                                 <!-- Cambia el enlace para que dirija a la vista de detalle de la ask -->
-                                <a href="{% url 'news:ask_detail' ask.id %}" style="color:#000000">{{ ask.title }}</a>
+                                <a href="{% url 'news:item_detail' ask.id %}" style="color:#000000">{{ ask.title }}</a>
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <td class="subtext">
                             <span class="subtext">
-                                {{ ask.points }} points by <a href="example.com">{{ ask.author }}</a> 
+                                {{ ask.points }} points by <a href="{% url 'news:user_profile' %}?username={{ ask.author.username }}">{{ ask.author.username }}</a> 
                                 {{ ask.published_date|timesince }} ago | 
                                 <a href="example.com"> hide</a> | 
                                 <a href="example.com"> past</a> | 
-                                <a href="example.com"> discuss</a>
+                                <a href="{% url 'news:item_detail' ask.id %}">
+                                    {% with comment_count=ask.comments_set.count %}
+                                        {% if comment_count == 0 %}
+                                            discuss
+                                        {% else %}
+                                            {{ comment_count }} comment{{ comment_count|pluralize }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </a>
                             </span>
                         </td>
                     </tr>
