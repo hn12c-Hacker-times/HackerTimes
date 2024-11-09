@@ -3,7 +3,7 @@ from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import News, Comments, Search, CustomUser
+from .models import News, Comments, Search, CustomUser, Thread
 from .forms import NewsForm, UserForm, AskNewsForm, CommentForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
@@ -374,7 +374,7 @@ def hide_submission(request, submission_id):
     if user_data:
         news_item = get_object_or_404(News, id=submission_id)
         news_item.is_hidden = True
-        news_item.save() 
+        news_item.save(update_fields=['is_hidden'])
 
         user = CustomUser.objects.get(email=user_data['email'])
         hidden_count = News.objects.filter(is_hidden=True, author=user).count()
@@ -403,7 +403,7 @@ def unhide_submission(request, submission_id):
     if user_data:
         news_item = get_object_or_404(News, id=submission_id)
         news_item.is_hidden = False
-        news_item.save() 
+        news_item.save(update_fields=['is_hidden']) 
         
         # Mensaje en la terminal
         print(f"La noticia \"{news_item.title}\" ha sido desocultada.")
@@ -412,3 +412,9 @@ def unhide_submission(request, submission_id):
         return redirect('news:hidden_submissions')  # Redirigir a la vista de hidden submissions
 
     return login(request)
+
+
+class ThreadListView(ListView):
+    model = Thread
+    template_name = 'threads.html' 
+    context_object_name = 'threads'

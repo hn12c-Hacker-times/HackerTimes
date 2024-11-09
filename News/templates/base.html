@@ -20,14 +20,14 @@
                                 <tr>
                                     <td style="width:18px;padding-right:4px">
                                         <a href="http://localhost:8000/">
-                                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/y18.svg" width="18" height="18" style="border:1px white solid; display:block">
+                                            <img src="{% static 'y18.svg' %}" width="18" height="18" style="border:1px white solid; display:block">
                                         </a>
                                     </td>
                                     <td style="line-height:12pt; height:10px;">
                                         <span class="pagetop">
                                             <b class="hnname"><a href="{% url 'news:news_list' %}">Hacker News</a></b>
                                             <a href="{% url 'news:newest_news' %}">new</a> | 
-                                            <a href="front">threads</a> | 
+                                            <a href="{% url 'news:thread_list' %}">threads</a> | 
                                             <a href="{% url 'news:comments_list' %}">comments</a> | 
                                             <a href="{% url 'news:ask_list' %}">ask</a> | 
                                             <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a> 
@@ -43,7 +43,7 @@
                                         </form>
                                         {% if request.session.user_data %}
                                             <span class="pagetop">
-                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.given_name }}</a> |  <!-- Muestra el nombre de usuario -->
+                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> |  <!-- Muestra el nombre de usuario -->
                                                 <a href="{% url 'news:logout' %}">logout</a>
                                             </span>
                                         {% else %}
