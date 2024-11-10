@@ -76,7 +76,7 @@ class CommentListView(ListView):
 # Vista de la lista de search
 class SearchListView(ListView):
     model = News  # We are searching through the News model
-    template_name = 'searchlist.html'  # The template that displays the search results
+    template_name = 'Searchlist.html'  # The template that displays the search results
     context_object_name = 'search_list'  # The name of the context passed to the template
 
     def get_queryset(self):
