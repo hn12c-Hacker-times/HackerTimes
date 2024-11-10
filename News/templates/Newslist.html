@@ -1,59 +1,70 @@
 {% extends 'base.html' %}
-
 {% block title %}News List{% endblock %}
-
 {% block content %}
-    <!--<h2>News List</h2>-->
+
+    {% if viewing_user %}
+    <div style="margin-left: 40px; margin-bottom: 10px;">
+        <span style="color: #828282;">Submissions by {{ viewing_user }}</span>
+    </div>
+    {% endif %}
+
     <ol type="1">
         {% load static %}
-            {% for new in news_list %}
-                <li>
-                    <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
-                        <tbody>
-                            <tr>
-                                <td class="titleline">
-                                    <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
-                                    <span class="titleline">
-                                        {% if new.url %}
-                                            <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
-                                            {% if new.urlDomain %}
-                                                <span class="comhead">({{ new.urlDomain }})</span>
-                                            {% endif %}
+        {% for new in news_list %}
+        <li>
+            <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
+                <tbody>
+                    <tr>
+                        <td class="titleline">
+                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <span class="titleline">
+                                {% if new.url %}
+                                    <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
+                                    {% if new.urlDomain %}
+                                        <span class="comhead">({{ new.urlDomain }})</span>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
+                                {% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="subtext">
+                            <span class="subtext">
+                                {{ new.points }} points by 
+                                <a href="{% url 'news:user_profile' %}?username={{ new.author.username }}"> {{ new.author.username }}</a>
+                                {{ new.published_date|timesince }} ago |
+                                <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
+                                <a href="{% url 'news:item_detail' new.id %}">
+                                    {% with comment_count=new.comments_set.count %}
+                                        {% if comment_count == 0 %}
+                                            discuss
                                         {% else %}
-                                            <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
+                                            {{ comment_count }} comment{{ comment_count|pluralize }}
                                         {% endif %}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="subtext">
-                                    <span class="subtext">
-                                        {{ new.points }} points by <a href="{% url 'news:user_profile' %}?username={{ new.author.username }}"> {{ new.author.username }}</a>
-                                        {{ new.published_date|timesince }} ago |
-                                        <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
-                                        <a href="{% url 'news:item_detail' new.id %}">
-                                            {% with comment_count=new.comments_set.count %}
-                                                {% if comment_count == 0 %}
-                                                    discuss
-                                                {% else %}
-                                                    {{ comment_count }} comment{{ comment_count|pluralize }}
-                                                {% endif %}
-                                            {% endwith %}
-                                        </a>
-                                        {% if request.session.user_data.given_name == new.author.username %}
-                                            | <a href="{% url 'news:edit_news' new.id %}">edit</a>
-                                            | <a href="{% url 'news:delete_news' new.id %}">delete</a>
-                                        {% endif %}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="spacer" style="height:5px"></tr>
-                        </tbody>
-                    </table>
-                </li>
-            
-            {% empty %}
-                <li>No news available.</li>
-            {% endfor %}
+                                    {% endwith %}
+                                </a>
+                                {% if request.session.user_data.given_name == new.author.username %}
+                                    | <a href="{% url 'news:edit_news' new.id %}">edit</a>
+                                    | <a href="{% url 'news:delete_news' new.id %}">delete</a>
+                                {% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="spacer" style="height:5px"></tr>
+                </tbody>
+            </table>
+        </li>
+        {% empty %}
+        <li style="margin-left: 40px; color: #828282;">
+            {% if viewing_user %}
+                No submissions found for {{ viewing_user }}.
+            {% else %}
+                No news available.
+            {% endif %}
+        </li>
+        {% endfor %}
     </ol>
+
 {% endblock %}
