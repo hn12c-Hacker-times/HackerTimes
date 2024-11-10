@@ -1,13 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}News List{% endblock %}
 {% block content %}
-
-    {% if viewing_user %}
-    <div style="margin-left: 40px; margin-bottom: 10px;">
-        <span style="color: #828282;">Submissions by {{ viewing_user }}</span>
-    </div>
-    {% endif %}
-
     <ol type="1">
         {% load static %}
         {% for new in news_list %}

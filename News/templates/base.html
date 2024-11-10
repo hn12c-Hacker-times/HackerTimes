@@ -32,7 +32,10 @@
                                             <a href="{% url 'news:ask_list' %}">ask</a> | 
                                             <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a> |
                                             {% if request.path == '/hidden/' %}  <!-- Mostrar solo si estamos en hidden -->
-                                                | <a href="{% url 'news:hidden_submissions' %}" class="active" style="color: white;">hidden</a>
+                                                <a href="{% url 'news:hidden_submissions' %}" class="active" style="color: white;">hidden</a> |
+                                            {% endif %}
+                                            {% if viewing_user %}
+                                                <a href="#" class="active" style="color: white;">{{ viewing_user }}'s submissions</a> |
                                             {% endif %}
                                             <form action="/search/" method="GET" style="display:inline;">
                                                 <input type="text" name="q" placeholder="Search" style="height:18px; margin-right:4px;">
