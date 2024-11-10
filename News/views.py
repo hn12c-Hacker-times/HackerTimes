@@ -27,15 +27,15 @@ class NewListView(ListView):
     def get_queryset(self):
         username = self.request.GET.get("username", "")
         if username:
-            author = CustomUser.objects.filter(username=username).first()
-            if author: 
-                res = News.objects.filter(author=username, is_hidden=False).order_by('-published_date')
-                if not res.exists():
-                    return HttpResponse(status=404)
-                else:
-                    return res
-        # Ordenar por puntos
-        return News.objects.filter(is_hidden=False).order_by('-points')
+            return News.objects.filter(author__username=username).order_by('-published_date')
+        return News.objects.order_by('-points')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        username = self.request.GET.get("username", "")
+        if username:
+            context['viewing_user'] = username
+        return context
         
 
 # Vista de la lista de news
