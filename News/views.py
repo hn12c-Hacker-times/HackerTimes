@@ -96,14 +96,27 @@ class CommentListView(ListView):
     context_object_name = 'comments_list'
     
     def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        user_email = user_data.get('email') if user_data else None
+
         username = self.request.GET.get("username", "")
         if username:
-            res = Comments.objects.filter(username=username).order_by('-published_date')
-            if not res.exists():
-                return HttpResponse(status=404)  # No se encontraron comentarios
-            else:
-                return res
-        return Comments.objects.order_by('-published_date')
+            queryset = Comments.objects.filter(author__username=username).order_by('-published_date')
+            if not queryset.exists():
+                return HttpResponse(status=404)  # No comments found
+            return self.annotate_comment_votes(queryset, user_email)
+        
+        queryset = Comments.objects.order_by('-published_date')
+        return self.annotate_comment_votes(queryset, user_email)
+
+    def annotate_comment_votes(self, queryset, user_email):
+        if user_email:
+            for comment in queryset:
+                comment.user_has_voted = comment.voters.filter(email=user_email).exists()
+        else:
+            for comment in queryset:
+                comment.user_has_voted = False
+        return queryset
 
 class SearchListView(ListView):
     model = News  # We are searching through the News model
@@ -440,6 +453,33 @@ def vote(request, news_id):
             
             print(f"User {user.email} has voted/unvoted")
             return redirect('news:news_list')  # Redirect to a relevant page after voting
+
+    return login(request)
+
+def vote_comment(request, comment_id):
+    user_data = request.session.get('user_data')
+    
+    if user_data:
+        email = user_data.get('email')  # Retrieve the email from the session data
+        if email:
+            try:
+                user = CustomUser.objects.get(email=email)
+            except CustomUser.DoesNotExist:
+                return HttpResponse("User not found", status=404)
+
+            comment = get_object_or_404(Comments, id=comment_id)
+            
+            if user in comment.voters.all():
+                # Unvote logic
+                comment.voters.remove(user)
+                comment.save()
+            else:
+                # Vote logic
+                comment.voters.add(user)
+                comment.save()
+            
+            print(f"User {user.email} has voted/unvoted on comment {comment_id}")
+            return redirect('news:comments_list')  # Redirect to a relevant page after voting
 
     return login(request)
 
