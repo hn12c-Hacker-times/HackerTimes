@@ -11,7 +11,13 @@
                     <tbody>
                         <tr>
                             <td class="titleline">
-                                <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                                <button class="vote-btn" data-news-id="{{ new.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
+                                    {% if not new.user_has_voted and request.session.user_data.given_name != new.author.username%}
+                                        <a href="{% url 'news:vote' new.id %}">
+                                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+                                        </a>   
+                                    {% endif %}
+                                </button>
                                 <span class="titleline">
                                     <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a> 
                                     <span class="comhead">({{ new.urlDomain }})</span>
@@ -21,18 +27,32 @@
                         <tr>
                             <td class="subtext">
                                 <span class="subtext">
-                                    {{ new.points }} points by <a href="example.com">{{ new.author }}</a>
-                                    {{ new.published_date|timesince }} ago | 
-                                    <a href="example.com">hide</a> | 
-                                    <a href="example.com">past</a> | 
-                                    <a href="example.com">discuss</a>
-                                </span>
-                            </td>
-                        </tr>
-                        <tr class="spacer" style="height:5px"></tr>
-                    </tbody>
-                </table>
-            </li>
+                                    {{ new.points }} points by <a href="{% url 'news:user_profile' %}?username={{ new.author.username }}"> {{ new.author.username }}</a>
+                                    {{ new.published_date|timesince }} ago |
+                                    {% if new.user_has_voted %}
+                                            <a href="{% url 'news:vote' new.id %}">unvote</a> |
+                                    {% endif %}
+                                    <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
+                                        <a href="{% url 'news:item_detail' new.id %}">
+                                            {% with comment_count=new.comments_set.count %}
+                                                {% if comment_count == 0 %}
+                                                    discuss
+                                                {% else %}
+                                                    {{ comment_count }} comment{{ comment_count|pluralize }}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </a>
+                                        {% if request.session.user_data.given_name == new.author.username %}
+                                            | <a href="{% url 'news:edit_news' new.id %}">edit</a>
+                                            | <a href="{% url 'news:delete_news' new.id %}">delete</a>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr class="spacer" style="height:5px"></tr>
+                        </tbody>
+                    </table>
+                </li>
         {% empty %}
             <p>No news found for this search.</p>
         {% endfor %}
