@@ -10,7 +10,13 @@
                 <tbody>
                     <tr>
                         <td class="titleline">
-                            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                            <button class="vote-btn" data-news-id="{{ new.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
+                                {% if not ask.user_has_voted and request.session.user_data.given_name != ask.author.username%}
+                                    <a href="{% url 'news:vote' ask.id %}">
+                                        <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+                                    </a>   
+                                {% endif %}
+                            </button>
                             <span class="titleline">
                                 <!-- Cambia el enlace para que dirija a la vista de detalle de la ask -->
                                 <a href="{% url 'news:item_detail' ask.id %}" style="color:#000000">{{ ask.title }}</a>
@@ -21,7 +27,10 @@
                         <td class="subtext">
                             <span class="subtext">
                                 {{ ask.points }} points by <a href="{% url 'news:user_profile' %}?username={{ ask.author.username }}">{{ ask.author.username }}</a> 
-                                {{ ask.published_date|timesince }} ago | 
+                                {{ ask.published_date|timesince }} ago |
+                                {% if ask.user_has_voted %}
+                                    <a href="{% url 'news:vote' ask.id %}">unvote</a> |
+                                {% endif %} 
                                 <a href="example.com"> hide</a> | 
                                 <a href="example.com"> past</a> | 
                                 <a href="{% url 'news:item_detail' ask.id %}">

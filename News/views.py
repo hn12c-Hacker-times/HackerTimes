@@ -25,28 +25,39 @@ class NewListView(ListView):
     context_object_name = 'news_list'
     
     def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        user_email = user_data.get('email') if user_data else None
+
         username = self.request.GET.get("username", "")
         if username:
-            return News.objects.filter(author__username=username).order_by('-published_date')
-        return News.objects.order_by('-points')
-
+            author = CustomUser.objects.filter(username=username).first()
+            if author:
+                queryset = News.objects.filter(author=author, is_hidden=False).order_by('-published_date')
+                if not queryset.exists():
+                    return HttpResponse(status=404)
+                return annotate_user_votes(queryset, user_email)
+        
+        queryset = News.objects.filter(is_hidden=False).order_by('-points')
+        return annotate_user_votes(queryset, user_email)
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         username = self.request.GET.get("username", "")
         if username:
             context['viewing_user'] = username
         return context
-        
-
-# Vista de la lista de news
+    
 class NewestListView(ListView):
     model = News
     template_name = 'Newestlist.html'
     context_object_name = 'newest_list'
     
     def get_queryset(self):
-        # Excluir las ocultas
-        return News.objects.filter(is_hidden=False).order_by('-published_date')
+        user_data = self.request.session.get('user_data')
+        user_email = user_data.get('email') if user_data else None
+
+        queryset = News.objects.filter(is_hidden=False).order_by('-published_date')
+        return annotate_user_votes(queryset, user_email)
 
 class AskListView(ListView):
     model = News
@@ -54,8 +65,11 @@ class AskListView(ListView):
     context_object_name = 'ask_list'
 
     def get_queryset(self):
-        # Filtrar los objetos News que no tienen URL
-        return News.objects.filter(url='').order_by('-published_date')
+        user_data = self.request.session.get('user_data')
+        user_email = user_data.get('email') if user_data else None
+
+        queryset = News.objects.filter(url='').order_by('-published_date')
+        return annotate_user_votes(queryset, user_email)
 
 # Vista de la lista de comments
 class CommentListView(ListView):
@@ -73,7 +87,6 @@ class CommentListView(ListView):
                 return res
         return Comments.objects.order_by('-published_date')
 
-# Vista de la lista de search
 class SearchListView(ListView):
     model = News  # We are searching through the News model
     template_name = 'Searchlist.html'  # The template that displays the search results
@@ -82,6 +95,8 @@ class SearchListView(ListView):
     def get_queryset(self):
         # Get the search query from the URL parameters
         query = self.request.GET.get('q')
+        user_data = self.request.session.get('user_data')
+        user_email = user_data.get('email') if user_data else None
 
         if query:
             # Save the search query in the Search model for tracking (optional)
@@ -89,9 +104,12 @@ class SearchListView(ListView):
                 Search.objects.create(text=query, author=self.request.user)
 
             # Filter the news items based on the search query
-            return News.objects.filter(
+            queryset = News.objects.filter(
                 Q(title__icontains=query)
             ).order_by('-published_date')
+
+            # Annotate the queryset with user voting data
+            return annotate_user_votes(queryset, user_email)
         else:
             return News.objects.none()
 
@@ -159,7 +177,14 @@ class UserView(View):
             #Manejo de errores, podrías incluir más información
             return HttpResponse(status=400)
 
-#LOGIN DE GOOGLE
+def annotate_user_votes(news_list, user_email):
+    if user_email:
+        for news_item in news_list:
+            news_item.user_has_voted = news_item.voters.filter(email=user_email).exists()
+    else:
+        for news_item in news_list:
+            news_item.user_has_voted = False
+    return news_list
 
 @csrf_exempt
 def submit(request):
@@ -346,6 +371,7 @@ def login(request):
                         delay=0
                     );
                 request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
+                print(user_data)
                 return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias
             except ValueError:
                 return HttpResponse(status=403)  # Token no válido
@@ -366,6 +392,36 @@ class CustomUserDetailView(DetailView):
     context_object_name = 'user'
     slug_field = 'email'
     slug_url_kwarg = 'email'
+
+
+def vote(request, news_id):
+    user_data = request.session.get('user_data')
+    
+    if user_data:
+        email = user_data.get('email')  # Retrieve the email from the session data
+        if email:
+            try:
+                user = CustomUser.objects.get(email=email)
+            except CustomUser.DoesNotExist:
+                return HttpResponse("User not found", status=404)
+
+            news = get_object_or_404(News, id=news_id)
+            
+            if user in news.voters.all():
+                # Unvote logic
+                news.voters.remove(user)
+                news.points -= 1  # Decrease the vote count
+                news.save()
+            else:
+                # Vote logic
+                news.voters.add(user)
+                news.points += 1  # Increase the vote count
+                news.save()
+            
+            print(f"User {user.email} has voted/unvoted")
+            return redirect('news:news_list')  # Redirect to a relevant page after voting
+
+    return login(request)
 
 @csrf_exempt
 def hide_submission(request, submission_id):
