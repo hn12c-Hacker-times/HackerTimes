@@ -3,7 +3,7 @@ from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import News, Comments, Search, CustomUser, Thread
+from .models import News, Comments, Search, CustomUser, HiddenNews, Thread
 from .forms import NewsForm, UserForm, AskNewsForm, CommentForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
@@ -26,17 +26,36 @@ class NewListView(ListView):
     
     def get_queryset(self):
         username = self.request.GET.get("username", "")
-        if username:
-            author = CustomUser.objects.filter(username=username).first()
-            if author: 
-                res = News.objects.filter(author=username, is_hidden=False).order_by('-published_date')
-                if not res.exists():
-                    return HttpResponse(status=404)
-                else:
-                    return res
-        # Ordenar por puntos
-        return News.objects.filter(is_hidden=False).order_by('-points')
-        
+        user_data = self.request.session.get('user_data')
+
+        if user_data:
+            user = CustomUser.objects.get(email=user_data['email'])
+            print(f"User data: {user_data}")  # Ver el usuario y su información
+
+            # Obtener las noticias ocultas de ese usuario
+            hidden_news_ids = HiddenNews.objects.filter(user=user).values_list('news_id', flat=True)
+            print(f"Hidden news IDs: {list(hidden_news_ids)}")  # Ver los IDs de noticias ocultas
+
+            # Si hay un nombre de usuario, mostrar solo las noticias de ese usuario
+            if username:
+                author = CustomUser.objects.filter(username=username).first()
+                if author:
+                    res = News.objects.filter(author=username, is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-published_date')
+                    print(f"Query for author '{username}': {res}")  # Ver la consulta para el autor
+                    if not res.exists():
+                        return HttpResponse(status=404)
+                    else:
+                        return res
+            
+            # Excluir las noticias ocultas para el usuario actual
+            news = News.objects.filter(is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-points')
+            print(f"News queryset (excluding hidden): {news}")  # Ver el queryset final
+            return news
+
+        # Si el usuario no está logueado, solo mostrar las noticias no ocultas
+        news = News.objects.filter(is_hidden=False).order_by('-published_date')
+        print(f"News queryset (not logged in): {news}")  # Ver el queryset cuando no hay usuario logueado
+        return news
 
 # Vista de la lista de news
 class NewestListView(ListView):
@@ -110,7 +129,7 @@ class UserView(View):
         user = CustomUser.objects.get(email=email)
         
         if user:
-            hidden_news = News.objects.filter(is_hidden=True, author=user) 
+            hidden_news = News.objects.filter(id__in=HiddenNews.objects.filter(user=user).values('news')) 
             hidden_count = hidden_news.count()
             
             form = UserForm(instance=user)  # Crea el formulario con la instancia del usuario
@@ -355,8 +374,10 @@ def login(request):
 def logout(request):
     # Cerrar la sesión del usuario
     auth_logout(request)
+    print("Session data before flush:", request.session.items())  # Imprime los datos de la sesión antes de limpiar
     # Limpiar la sesión
     request.session.flush()
+    print("Session data after flush:", request.session.items())  # Imprime los datos de la sesión después de limpiar
     # Redirigir a la lista de noticias
     return redirect('news:news_list')
 
@@ -373,25 +394,29 @@ def hide_submission(request, submission_id):
 
     if user_data:
         news_item = get_object_or_404(News, id=submission_id)
-        news_item.is_hidden = True
-        news_item.save(update_fields=['is_hidden'])
-
         user = CustomUser.objects.get(email=user_data['email'])
-        hidden_count = News.objects.filter(is_hidden=True, author=user).count()
-        print(f"La noticia \"{news_item.title}\" ha sido ocultada. Tienes ahora {hidden_count} noticias ocultas.")
-        
+
+        if not HiddenNews.objects.filter(user=user, news=news_item).exists():
+            HiddenNews.objects.create(user=user, news=news_item, hidden_at=timezone.now())
+            news_item.is_hidden = True
+            news_item.save(update_fields=['is_hidden'])
+            print(f"News {news_item.title} has been hidden for {user.email}")
+        else:
+            print(f"News {news_item.title} is already hidden for {user.email}")
+
         next_url = request.GET.get('next', 'news:news_list')
         return redirect(next_url)
 
     return login(request)
+
 
 def hidden_submissions(request):
     user_data = request.session.get('user_data')
     if user_data:
         user = CustomUser.objects.get(email=user_data['email'])
         
-        hidden_news = News.objects.filter(is_hidden=True, author=user)
-        
+        hidden_news = News.objects.filter(id__in=HiddenNews.objects.filter(user=user).values('news'))
+
         return render(request, 'hidden_submissions.html', {'hidden_news': hidden_news})
 
     return redirect('news:sign_in') 
@@ -402,14 +427,16 @@ def unhide_submission(request, submission_id):
 
     if user_data:
         news_item = get_object_or_404(News, id=submission_id)
+        user = CustomUser.objects.get(email=user_data['email'])
+
+        HiddenNews.objects.filter(user=user, news=news_item).delete()
+
         news_item.is_hidden = False
-        news_item.save(update_fields=['is_hidden']) 
-        
-        # Mensaje en la terminal
+        news_item.save(update_fields=['is_hidden'])
+
         print(f"La noticia \"{news_item.title}\" ha sido desocultada.")
-        
-        # Redirigir a la vista correspondiente
-        return redirect('news:hidden_submissions')  # Redirigir a la vista de hidden submissions
+
+        return redirect('news:hidden_submissions')  
 
     return login(request)
 

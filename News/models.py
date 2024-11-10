@@ -59,3 +59,15 @@ class Thread(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class HiddenNews(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    news = models.ForeignKey(News, on_delete=models.CASCADE)
+    hidden_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'news')  # Para asegurarnos de que un usuario no pueda ocultar la misma noticia varias veces
+    
+    def __str__(self):
+        return f"News {self.news.title} hidden by {self.user.email}"
