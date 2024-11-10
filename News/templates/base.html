@@ -30,17 +30,20 @@
                                             <a href="{% url 'news:thread_list' %}">threads</a> | 
                                             <a href="{% url 'news:comments_list' %}">comments</a> | 
                                             <a href="{% url 'news:ask_list' %}">ask</a> | 
-                                            <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a> 
+                                            <a href="{% url 'news:submit_news' %}" rel="nofollow">submit</a> |
                                             {% if request.path == '/hidden/' %}  <!-- Mostrar solo si estamos en hidden -->
-                                                | <a href="{% url 'news:hidden_submissions' %}" class="active" style="color: white;">hidden</a>
+                                                <a href="{% url 'news:hidden_submissions' %}" class="active" style="color: white;">hidden</a> |
                                             {% endif %}
+                                            {% if viewing_user %}
+                                                <a href="#" class="active" style="color: white;">{{ viewing_user }}'s submissions</a> |
+                                            {% endif %}
+                                            <form action="/search/" method="GET" style="display:inline;">
+                                                <input type="text" name="q" placeholder="Search" style="height:18px; margin-right:4px;">
+                                                <button type="submit" style="height:22px;">Search</button>
+                                            </form>
                                         </span>
                                     </td>
                                     <td style="text-align:right;padding-right:4px;">
-                                        <form action="/search/" method="GET" style="display:inline;">
-                                            <input type="text" name="q" placeholder="Search" style="height:18px; margin-right:4px;">
-                                            <button type="submit" style="height:22px;">Search</button>
-                                        </form>
                                         {% if request.session.user_data %}
                                             <span class="pagetop">
                                                 <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> |  <!-- Muestra el nombre de usuario -->

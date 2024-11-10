@@ -27,9 +27,10 @@ class News(models.Model):
     urlDomain = models.CharField(max_length=200)
     text = models.TextField(max_length=200, blank=True)
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    published_date = models.DateTimeField(auto_now=True)
+    published_date = models.DateTimeField(auto_now_add=True)
     points = models.IntegerField(default=0) 
     is_hidden = models.BooleanField(default=False)
+    voters = models.ManyToManyField(CustomUser, related_name='voted_news', blank=True)
 
     def __str__(self):
         return self.title

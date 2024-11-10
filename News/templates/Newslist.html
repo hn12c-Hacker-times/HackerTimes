@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
-
 {% block title %}News List{% endblock %}
-
 {% block content %}
-    <!--<h2>News List</h2>-->
     <ol type="1">
         {% load static %}
             {% for new in news_list %}
@@ -12,14 +9,22 @@
                         <tbody>
                             <tr>
                                 <td class="titleline">
-                                    <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10"  align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
+                                    <button class="vote-btn" data-news-id="{{ new.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
+                                        {% if not new.user_has_voted and request.session.user_data.given_name != new.author.username%}
+                                            <a href="{% url 'news:vote' new.id %}">
+                                                <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+                                            </a>   
+                                        {% endif %}
+                                    </button>
                                     <span class="titleline">
                                         {% if new.url %}
+                                            <!-- Es una news -->
                                             <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
                                             {% if new.urlDomain %}
                                                 <span class="comhead">({{ new.urlDomain }})</span>
                                             {% endif %}
                                         {% else %}
+                                            <!-- Es un ask -->
                                             <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
                                         {% endif %}
                                     </span>
@@ -30,6 +35,9 @@
                                     <span class="subtext">
                                         {{ new.points }} points by <a href="{% url 'news:user_profile' %}?username={{ new.author.username }}"> {{ new.author.username }}</a>
                                         {{ new.published_date|timesince }} ago |
+                                        {% if new.user_has_voted %}
+                                            <a href="{% url 'news:vote' new.id %}">unvote</a> |
+                                        {% endif %}
                                         <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
                                         <a href="{% url 'news:item_detail' new.id %}">
                                             {% with comment_count=new.comments_set.count %}
@@ -52,8 +60,15 @@
                     </table>
                 </li>
             
-            {% empty %}
-                <li>No news available.</li>
-            {% endfor %}
+                {% empty %}
+                <li style="margin-left: 40px; color: #828282;">
+                    {% if viewing_user %}
+                        No submissions found for {{ viewing_user }}.
+                    {% else %}
+                        No news available.
+                    {% endif %}
+                </li>
+                {% endfor %}
     </ol>
+
 {% endblock %}
