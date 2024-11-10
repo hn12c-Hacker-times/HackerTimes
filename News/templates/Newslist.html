@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
-
 {% block title %}News List{% endblock %}
-
 {% block content %}
-    <!--<h2>News List</h2>-->
     <ol type="1">
         {% load static %}
             {% for new in news_list %}
@@ -21,11 +18,13 @@
                                     </button>
                                     <span class="titleline">
                                         {% if new.url %}
+                                            <!-- Es una news -->
                                             <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
                                             {% if new.urlDomain %}
                                                 <span class="comhead">({{ new.urlDomain }})</span>
                                             {% endif %}
                                         {% else %}
+                                            <!-- Es un ask -->
                                             <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
                                         {% endif %}
                                     </span>
@@ -61,8 +60,15 @@
                     </table>
                 </li>
             
-            {% empty %}
-                <li>No news available.</li>
-            {% endfor %}
+                {% empty %}
+                <li style="margin-left: 40px; color: #828282;">
+                    {% if viewing_user %}
+                        No submissions found for {{ viewing_user }}.
+                    {% else %}
+                        No news available.
+                    {% endif %}
+                </li>
+                {% endfor %}
     </ol>
+
 {% endblock %}

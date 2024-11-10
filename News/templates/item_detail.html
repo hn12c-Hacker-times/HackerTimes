@@ -31,9 +31,9 @@
     </tr>
     {% if item.text %}
     <tr>
-      <!--td class="comment-content" style="padding: 10px 0 10px 40px; color: #000000;">
+      <td class="comment-content" style="padding-left: 15px; margin-top: 5px;">
         {{ item.text }}
-      </td-->
+      </td>
     </tr>
     {% endif %}
   </tbody>
@@ -57,27 +57,20 @@
   {% if not comment.parent %}  {# Solo mostrar comentarios principales #}
   <tr>
     <td style="padding-left: 40px;">
+      <!-- Comentario principal -->
       <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
       <div class="comhead" style="color: #828282; margin-bottom: 6px;">
         {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ comment.author.username }}" style="color: #828282">{{ comment.author.username }}</a>
         {{ comment.published_date|timesince }} ago |
         {% if request.session.user_data.given_name == comment.author.username %}
           <a href="{% url 'news:edit_comment' comment.id %}">edit</a> |
-          <a href="{% url 'news:delete_comment' comment.id %}" onclick="return confirm('Are you sure you want to delete this comment?')" style="color: #828282">delete</a>
+          <a href="{% url 'news:delete_comment' comment.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
         {% endif %}
       </div>
       <div id="comment-text-{{ comment.id }}" class="comment-text" style="margin-bottom: 15px; color: #000000;">
         {{ comment.text }}
       </div>
-      <div id="comment-edit-{{ comment.id }}" style="display: none; margin-bottom: 15px;">
-        <form method="post" action="{% url 'news:edit_comment' comment.id %}">
-          {% csrf_token %}
-          <textarea name="text" rows="6" cols="60" required>{{ comment.text }}</textarea>
-          <br><br>
-          <input type="submit" value="update">
-          <button type="button" onclick="cancelEdit('comment-{{ comment.id }}')">cancel</button>
-        </form>
-      </div>
+      
       {% if user_data %}
       <div style="margin: -10px 0 15px 0">
         <a href="javascript:void(0)" onclick="showReplyForm('{{ comment.id }}')" style="margin-left: 15px; color: #000000; font-size: 10px;"><u>reply</u></a>
@@ -90,48 +83,48 @@
         <input type="submit" value="reply">
       </form>
       {% endif %}
-      
+
+      <!-- Respuestas al comentario principal -->
       {% if comment.replies.all %}
-        {% with template_name="comment_tree.html" %}
-        <div style="margin-left: 40px;">
-            {% for reply in comment.replies.all %}
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-left: 40px;">
+        {% for reply in comment.replies.all %}
+        <tr>
+          <td>
             <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
             <div class="comhead" style="color: #828282; margin-bottom: 6px;">
-                {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a>
-                {{ reply.published_date|timesince }} ago |
-                {% if reply.parent %}
-                    <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a> |
-                {% endif %}
-                {% if request.session.user_data.given_name == reply.author.username %}
-                    <a href="{% url 'news:edit_comment' reply.id %}">edit</a> |
-                    <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
-                {% endif %}
+              {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a>
+              {{ reply.published_date|timesince }} ago |
+              <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a> |
+              {% if request.session.user_data.given_name == reply.author.username %}
+                <a href="{% url 'news:edit_comment' reply.id %}">edit</a> |
+                <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
+              {% endif %}
             </div>
             <div id="comment-text-{{ reply.id }}" class="comment-text" style="margin-bottom: 15px; color: #000000;">
-                {{ reply.text }}
+              {{ reply.text }}
             </div>
+
             {% if user_data %}
             <div style="margin: -10px 0 15px 0">
-                <a href="javascript:void(0)" onclick="showReplyForm('{{ reply.id }}')" style="margin-left: 15px; color: #000000; font-size: 10px;"><u>reply</u></a>
+              <a href="javascript:void(0)" onclick="showReplyForm('{{ reply.id }}')" style="margin-left: 15px; color: #000000; font-size: 10px;"><u>reply</u></a>
             </div>
             <form id="replyform-{{ reply.id }}" method="post" style="display: none; margin: 10px 0 15px 40px;">
-                {% csrf_token %}
-                <input type="hidden" name="parent_id" value="{{ reply.id }}">
-                <textarea name="text" rows="6" cols="60" required></textarea>
-                <br><br>
-                <input type="submit" value="reply">
+              {% csrf_token %}
+              <input type="hidden" name="parent_id" value="{{ reply.id }}">
+              <textarea name="text" rows="6" cols="60" required></textarea>
+              <br><br>
+              <input type="submit" value="reply">
             </form>
             {% endif %}
-            
+
+            <!-- Respuestas anidadas adicionales -->
             {% if reply.replies.all %}
-                {% with comment=reply %}
-                    {% include template_name %}
-                {% endwith %}
+              {% include "comment_tree.html" with comment=reply %}
             {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% endwith %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
       {% endif %}
     </td>
   </tr>

@@ -39,7 +39,14 @@ class NewListView(ListView):
         
         queryset = News.objects.filter(is_hidden=False).order_by('-points')
         return annotate_user_votes(queryset, user_email)
-
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        username = self.request.GET.get("username", "")
+        if username:
+            context['viewing_user'] = username
+        return context
+    
 class NewestListView(ListView):
     model = News
     template_name = 'Newestlist.html'
@@ -82,7 +89,7 @@ class CommentListView(ListView):
 
 class SearchListView(ListView):
     model = News  # We are searching through the News model
-    template_name = 'searchlist.html'  # The template that displays the search results
+    template_name = 'Searchlist.html'  # The template that displays the search results
     context_object_name = 'search_list'  # The name of the context passed to the template
 
     def get_queryset(self):

@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block title %}Search Results{% endblock %}
-
 {% block content %}
     <ol type="1">
         {% load static %}
@@ -19,8 +17,14 @@
                                     {% endif %}
                                 </button>
                                 <span class="titleline">
-                                    <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a> 
-                                    <span class="comhead">({{ new.urlDomain }})</span>
+                                    {% if new.url %}
+                                        <a href="{{ new.url }}" style="color:#000000">{{ new.title }}</a>
+                                        {% if new.urlDomain %}
+                                            <span class="comhead">({{ new.urlDomain }})</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{% url 'news:item_detail' new.id %}" style="color:#000000">{{ new.title }}</a>
+                                    {% endif %}
                                 </span>
                             </td>
                         </tr>
@@ -33,28 +37,24 @@
                                             <a href="{% url 'news:vote' new.id %}">unvote</a> |
                                     {% endif %}
                                     <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
-                                        <a href="{% url 'news:item_detail' new.id %}">
-                                            {% with comment_count=new.comments_set.count %}
-                                                {% if comment_count == 0 %}
-                                                    discuss
-                                                {% else %}
-                                                    {{ comment_count }} comment{{ comment_count|pluralize }}
-                                                {% endif %}
-                                            {% endwith %}
-                                        </a>
-                                        {% if request.session.user_data.given_name == new.author.username %}
-                                            | <a href="{% url 'news:edit_news' new.id %}">edit</a>
-                                            | <a href="{% url 'news:delete_news' new.id %}">delete</a>
-                                        {% endif %}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="spacer" style="height:5px"></tr>
-                        </tbody>
-                    </table>
-                </li>
+                                    <a href="{% url 'news:item_detail' new.id %}">
+                                        {% with comment_count=new.comments_set.count %}
+                                            {% if comment_count == 0 %}
+                                                discuss
+                                            {% else %}
+                                                {{ comment_count }} comment{{ comment_count|pluralize }}
+                                            {% endif %}
+                                        {% endwith %}
+                                    </a>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="spacer" style="height:5px"></tr>
+                    </tbody>
+                </table>
+            </li>
         {% empty %}
-            <p>No news found for this search.</p>
+        <p style="margin-left: 40px;">No news found for this search.</p>
         {% endfor %}
     </ol>
 {% endblock %}
