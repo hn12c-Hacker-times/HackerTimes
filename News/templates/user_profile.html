@@ -27,7 +27,7 @@
                                 <tr>
                                     <td valign="top" style="color:#000000;">user:</td>
                                     <td timestamp="1557689318">
-                                        <a href="/user/?username={{ user_profile.username }}" class="hnuser">{{ user_profile.username }}</a>
+                                        <a href="/user/{{ user_profile.username }}/" class="hnuser">{{ user_profile.username }}</a>
                                     </td>
                                 </tr>
                                 <tr>
@@ -49,7 +49,7 @@
                                 <tr>
                                     <td></td>
                                     <td>
-                                        <a href="{% url 'news:news_list' %}?username={{ user_profile.username }}" style="color:#000000;"><u>submissions</u></a>
+                                        <a href="{% url 'news:news_list' %}/{{ user_profile.username }}/" style="color:#000000;"><u>submissions</u></a>
                                     </td>
                                 </tr>
 

@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractUser
 
 # Modelo de usuario personalizado
 class CustomUser(models.Model):
-    username = models.CharField(max_length=150)  # Campo de nombre de usuario
+    username = models.CharField(max_length=150, unique=True)  # Campo de nombre de usuario
     email = models.EmailField(primary_key=True, max_length=254)
     created_at = models.DateTimeField(auto_now_add=True)  # Fecha de creación
     karma = models.PositiveIntegerField(default=0)  # Karma del usuario

@@ -14,7 +14,7 @@ from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
 from django.conf import settings
 from django.contrib import messages 
-import os, boto3
+import os, re
 import tldextract
 
 # Create your views here.
@@ -49,12 +49,10 @@ class NewListView(ListView):
             
             # Excluir las noticias ocultas para el usuario actual y ordenarlas por puntos
             queryset = News.objects.filter(is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-points')
-            print(f"News queryset (excluding hidden): {queryset}")  # Ver el queryset final
             return annotate_user_votes(queryset, user_email)
 
         # Si el usuario no está logueado, solo mostrar las noticias no ocultas
         queryset = News.objects.filter(is_hidden=False).order_by('-published_date')
-        print(f"News queryset (not logged in): {queryset}")  # Ver el queryset cuando no hay usuario logueado
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -190,15 +188,15 @@ class UserView(View):
             
             if 'banner_file' in request.FILES:
                 banner_file = request.FILES['banner_file']
-                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-                s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
+                #s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+                #s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
                 user.banner = f'{settings.AWS_S3_CUSTOM_DOMAIN}/banner/{banner_file.name}'  # Guarda la URL
                 user.save()
 
             if 'avatar_file' in request.FILES:
                 avatar_file = request.FILES['avatar_file']
-                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-                s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
+                #s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+                #s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
                 user.avatar = f'{settings.AWS_S3_CUSTOM_DOMAIN}/avatar/{avatar_file.name}'  # Guarda la URL
                 user.save()
             
@@ -223,7 +221,7 @@ def submit(request):
 
     username = request.GET.get("username", "")
     if username:
-        return redirect('/?username=' + username)
+        return redirect('/' + username+'/')
     if user_data:
         return create_news(request, user_data)
 
@@ -402,6 +400,13 @@ def login(request):
                 if CustomUser.objects.filter(email=user_data['email']).exists():
                     user = CustomUser.objects.get(email=user_data['email'])
                 else:
+                    if CustomUser.objects.filter(username=user_data['given_name']).exists():
+                        while CustomUser.objects.filter(username=user_data['given_name']+i).exists():
+                            i += 1
+                            nom = user_data['given_name']+i
+                    else:
+                        nom = user_data['given_name']
+                        
                     user = CustomUser.objects.create(
                         username=user_data['given_name'],
                         email=user_data['email'],
@@ -416,7 +421,6 @@ def login(request):
                         delay=0
                     );
                 request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
-                print(user_data)
                 return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias
             except ValueError:
                 return HttpResponse(status=403)  # Token no válido
@@ -437,8 +441,24 @@ class CustomUserDetailView(DetailView):
     model = CustomUser
     template_name = 'user.html'
     context_object_name = 'user'
+    
+    def get_object(self, queryset=None):
+        # Obtenemos el valor del parámetro slug desde la URL
+        identifier = self.kwargs.get(self.slug_url_kwarg)
+        
+        # Intentamos obtener el usuario por email
+        if re.match(r"[^@]+@[^@]+\.[^@]+", identifier):  # Verifica si el parámetro tiene formato de email
+            # Buscamos por email
+            user = get_object_or_404(self.model, email=identifier)
+        else:
+            # Si no es un email, lo buscamos por username
+            user = get_object_or_404(self.model, username=identifier)
+        
+        return user
+
     slug_field = 'email'
     slug_url_kwarg = 'email'
+
 
 
 def vote(request, news_id):

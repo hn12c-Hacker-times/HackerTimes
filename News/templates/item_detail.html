@@ -6,7 +6,13 @@
   <tbody>
     <tr>
       <td class="titleline" style ="margin-left: 15px;">
-        <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style=" border:0px; margin:3px 2px 6px;">
+        <button class="vote-btn" data-item-id="{{ item.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
+          {% if not item.user_has_voted and request.session.user_data.given_name != item.author.username%}
+            <a href="{% url 'news:vote' item.id %}">
+              <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+            </a>   
+          {% endif %}
+        </button>
         {% if item.url %}
           <a href="{{ item.url }}" style="color:#000000">{{ item.title }}</a>
           {% if item.urlDomain %}
@@ -20,7 +26,7 @@
     <tr>
       <td class="subtext">
         <span class="subtext" style="margin-left: 15px;">
-          {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ item.author.username }}">{{ item.author.username }}</a>
+          {{ item.points }} points by <a href="{% url 'news:user_profile' %}{{ item.author.username }}/">{{ item.author.username }}</a>
           {{ item.published_date|timesince }} ago
           {%if request.session.user_data.given_name != item.author.username%}
             {% if is_favorited %}
@@ -73,7 +79,7 @@
         {% endif %}
       </button>
       <div class="comhead" style="color: #828282; margin-bottom: 6px;">
-        {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ comment.author.username }}" style="color: #828282">{{ comment.author.username }}</a>
+        {{ item.points }} points by <a href="{% url 'news:user_profile' %}{{ comment.author.username }}/" style="color: #828282">{{ comment.author.username }}</a>
         {{ comment.published_date|timesince }} ago |
         {% if comment.user_has_voted %}
           <a href="{% url 'news:vote_comment' comment.id %}">unvote</a> |
@@ -110,11 +116,11 @@
               {% if not reply.user_has_voted and request.session.user_data.given_name != reply.author.username%}
               <a href="{% url 'news:vote_comment' reply.id %}">
                       <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
-                  </a>   
+                  </a>
               {% endif %}
             </button>
             <div class="comhead" style="color: #828282; margin-bottom: 6px;">
-              {{ item.points }} points by <a href="{% url 'news:user_profile' %}?username={{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a>
+              {{ item.points }} points by <a href=" {{ reply.author.username }}/" style="color: #828282">{{ reply.author.username }}</a>
               {{ reply.published_date|timesince }} ago |
               {% if reply.user_has_voted %}
                 <a href="{% url 'news:vote_comment' reply.id %}">unvote</a> |

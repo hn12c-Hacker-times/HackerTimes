@@ -8,7 +8,7 @@
       <!-- Mostrar el comentario padre -->
       <div class="comhead" style="color: #828282; margin-bottom: 6px;">
         <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
-        <a href="{% url 'news:user_profile' %}?username={{ parent_comment.author.username }}" style="color: #828282">{{ parent_comment.author.username }}</a>
+        <a href="{% url 'news:user_profile' %}{{ parent_comment.author.username }}/" style="color: #828282">{{ parent_comment.author.username }}</a>
         {{ parent_comment.published_date|timesince }} ago |
         <a href="{% url 'news:item_detail' news.id %}" style="color:#828282">on: {{ news.title }}</a>
       </div>
@@ -33,7 +33,7 @@
         <div style="margin-bottom: 15px;">
           <div class="comhead" style="color: #828282; margin-bottom: 6px;">
             <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border:0px; margin:3px 2px 6px;">
-            <a href="{% url 'news:user_profile' %}?username={{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a>
+            <a href="{% url 'news:user_profile' %}{{ reply.author.username }}/" style="color: #828282">{{ reply.author.username }}</a>
             {{ reply.published_date|timesince }} ago
             {% if user_data.given_name == reply.author.username %}
               | <a href="{% url 'news:edit_comment' reply.id %}">edit</a>
