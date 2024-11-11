@@ -28,8 +28,12 @@
         <span class="subtext" style="margin-left: 15px;">
           {{ item.points }} points by <a href="{% url 'news:user_profile' %}{{ item.author.username }}/">{{ item.author.username }}</a>
           {{ item.published_date|timesince }} ago
-          {% if item.user_has_voted %}
-          | <a href="{% url 'news:vote' item.id %}">unvote</a> |
+          {%if request.session.user_data.given_name != item.author.username%}
+            {% if is_favorited %}
+              | <a href="{% url 'news:favorite_news' item.id %}">unfavorite</a> |
+            {% else %}
+              | <a href="{% url 'news:favorite_news' item.id %}">favorite</a> |
+            {% endif %}
           {% endif %}
           {% if request.session.user_data.given_name == item.author.username %}
             | <a href="{% url 'news:edit_news' item.id %}">edit</a>

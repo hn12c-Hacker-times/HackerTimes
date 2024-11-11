@@ -35,5 +35,6 @@ urlpatterns = [
     path('threads/', views.ThreadListView.as_view(), name='thread_list'),
     path('vote/<int:news_id>/', views.vote, name='vote'),
     path('vote_comment/<int:comment_id>/', views.vote_comment, name='vote_comment'),
+    path('favorite/<int:news_id>/', views.favorite_news, name='favorite_news'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

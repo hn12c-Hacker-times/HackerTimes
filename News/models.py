@@ -17,6 +17,8 @@ class CustomUser(models.Model):
     max_visit = models.PositiveIntegerField(default=20)  # Máximo de visitas
     min_away = models.PositiveIntegerField(default=180)  # Tiempo mínimo de ausencia (en segundos)
     delay = models.PositiveIntegerField(default=0)  # Retraso en la actividad
+    favorite_news = models.ManyToManyField('News', related_name='favorited_by', blank=True) # Submissions favoritas
+    favorite_comments = models.ManyToManyField('Comments', related_name='favorited_by', blank=True) # Comentarios favoritos
 
     def __str__(self):
         return self.email
