@@ -301,38 +301,52 @@ def delete_news(request, news_id):
         
     return render(request, 'delete_confirmation.html', {'news': news, 'user_data': user_data})
 
-# Vista de la noticia i su campo de creacion de comentario
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import News, Comments, CustomUser
+
+# Vista de la noticia y su campo de creacion de comentario
 def item_detail(request, news_id):
     news = get_object_or_404(News, id=news_id)
     comments = Comments.objects.filter(New=news).order_by('-published_date')
-    
-    if request.method == "POST":
-        if not request.session.get('user_data'):
+    user_data = request.session.get('user_data')
+    is_favorited = False
+
+    # Check if the user is logged in and if they have favorited the news
+    if user_data:
+        user_email = user_data.get('email')
+        if user_email:
+            user = CustomUser.objects.filter(email=user_email).first()
+            if user:
+                # Check if the news is already favorited by the user
+                is_favorited = news in user.favorite_news.all()
+
+    # Handle comment creation if the user is logged in and POST data is provided
+    if request.method == "POST" and 'comment' in request.POST:
+        if not user_data:
             return redirect('news:login')
-            
+
         text = request.POST.get('text')
         parent_id = request.POST.get('parent_id')
-        
+
         if text:
-            author_name = request.session['user_data']['name']
-            author = CustomUser.objects.get(email=request.session['user_data']['email'])
-            parent = None
-            if parent_id:
-                parent = get_object_or_404(Comments, id=parent_id)
-                
+            author = CustomUser.objects.get(email=user_data['email'])
+            parent = get_object_or_404(Comments, id=parent_id) if parent_id else None
+
             Comments.objects.create(
                 text=text,
-                author= CustomUser.objects.get(email=request.session['user_data']['email']),
+                author=author,
                 New=news,
                 parent=parent
             )
             return redirect('news:item_detail', news_id=news_id)
-    
+
     return render(request, 'item_detail.html', {
         'item': news,
         'comments': comments,
-        'user_data': request.session.get('user_data')
+        'is_favorited': is_favorited,
+        'user_data': user_data
     })
+
     
 # Funcionalidad parent
 def comment_context(request, news_id, comment_id):
@@ -480,6 +494,56 @@ def vote_comment(request, comment_id):
             
             print(f"User {user.email} has voted/unvoted on comment {comment_id}")
             return redirect('news:comments_list')  # Redirect to a relevant page after voting
+
+    return login(request)
+
+def favorite_news(request, news_id):
+    user_data = request.session.get('user_data')
+    
+    if user_data:
+        email = user_data.get('email')  # Retrieve the email from session data
+        if email:
+            user = get_object_or_404(CustomUser, email=email)
+            news = get_object_or_404(News, id=news_id)
+            
+            if news in user.favorite_news.all():
+                # Unfavorite logic
+                user.favorite_news.remove(news)
+            else:
+                # Favorite logic
+                user.favorite_news.add(news)
+                # Print the list of favorite news titles
+                favorites = [n.title for n in user.favorite_news.all()]
+                print(f"Current favorite news for {user.email}: {favorites}")
+                
+            print(f"User {user.email} has favorited/unfavorited '{news.title}'")
+            
+            # Redirect back to the same page to show updated status
+            return redirect('news:item_detail', news_id=news_id)
+
+    return redirect('news:login')  # Redirect to login if user is not authenticated
+
+
+def favorite_comment(request, comment_id):
+    user_data = request.session.get('user_data')
+    
+    if user_data:
+        email = user_data.get('email')  # Retrieve the email from session data
+        if email:
+            user = get_object_or_404(CustomUser, email=email)
+            comment = get_object_or_404(Comments, id=comment_id)
+            
+            if comment in user.favorite_comments.all():
+                # Unfavorite logic
+                user.favorite_comments.remove(comment)
+            else:
+                # Favorite logic
+                user.favorite_comments.add(comment)
+                favorites = [n.text for n in user.favorite_comments.all()]
+                print(f"Current favorite comments for {user.email}: {favorites}")
+            
+            # Redirect back to the same page to show updated status
+            return redirect('news:item_detail', comment_id=comment_id)
 
     return login(request)
 
