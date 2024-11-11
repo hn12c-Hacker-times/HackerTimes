@@ -1,4 +1,5 @@
 #enviroment directory
 .env
 venv/
-__pycache__/
+*/__pycache__/
+.pyc

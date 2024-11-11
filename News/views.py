@@ -14,7 +14,7 @@ from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
 from django.conf import settings
 from django.contrib import messages 
-import os
+import os, re
 import tldextract
 
 # Create your views here.
@@ -221,7 +221,7 @@ def submit(request):
 
     username = request.GET.get("username", "")
     if username:
-        return redirect('/?username=' + username)
+        return redirect('/' + username+'/')
     if user_data:
         return create_news(request, user_data)
 
@@ -386,6 +386,13 @@ def login(request):
                 if CustomUser.objects.filter(email=user_data['email']).exists():
                     user = CustomUser.objects.get(email=user_data['email'])
                 else:
+                    if CustomUser.objects.filter(username=user_data['given_name']).exists():
+                        while CustomUser.objects.filter(username=user_data['given_name']+i).exists():
+                            i += 1
+                            nom = user_data['given_name']+i
+                    else:
+                        nom = user_data['given_name']
+                        
                     user = CustomUser.objects.create(
                         username=user_data['given_name'],
                         email=user_data['email'],
@@ -420,8 +427,24 @@ class CustomUserDetailView(DetailView):
     model = CustomUser
     template_name = 'user.html'
     context_object_name = 'user'
+    
+    def get_object(self, queryset=None):
+        # Obtenemos el valor del parámetro slug desde la URL
+        identifier = self.kwargs.get(self.slug_url_kwarg)
+        
+        # Intentamos obtener el usuario por email
+        if re.match(r"[^@]+@[^@]+\.[^@]+", identifier):  # Verifica si el parámetro tiene formato de email
+            # Buscamos por email
+            user = get_object_or_404(self.model, email=identifier)
+        else:
+            # Si no es un email, lo buscamos por username
+            user = get_object_or_404(self.model, username=identifier)
+        
+        return user
+
     slug_field = 'email'
     slug_url_kwarg = 'email'
+
 
 
 def vote(request, news_id):

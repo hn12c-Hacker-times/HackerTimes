@@ -21,7 +21,7 @@
     <tr>
     <td class="subtext">
     <span class="subtext">
-        {{ news.points }} points by <a href="{% url 'news:user_profile' %}?username={{ news.author.username }}"> {{ news.author.username }}</a>
+        {{ news.points }} points by <a href="{% url 'news:user_profile' %}{{ news.author.username }}/"> {{ news.author.username }}</a>
         {{ news.published_date|timesince }} ago |
         <a href="{% url 'news:edit_news' news.id %}"> edit</a>
     </span>

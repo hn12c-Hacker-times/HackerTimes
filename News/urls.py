@@ -19,6 +19,7 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('user/', UserView.as_view(), name='user_profile'),
     path('user/<str:email>/', CustomUserDetailView.as_view(), name='customuser_detail'),
+    path('user/username/<slug:username>/', CustomUserDetailView.as_view(), name='customuser_detail'),
     path('logout/', views.logout, name='logout'),
     path('comments/', CommentListView.as_view(), name='comments_list'),
     path('search/', SearchListView.as_view(), name='search_list'),
