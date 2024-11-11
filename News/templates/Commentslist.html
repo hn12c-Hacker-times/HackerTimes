@@ -37,7 +37,7 @@
                                 {% else %}
                                     <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">parent</a>
                                 {% endif %} 
-                                | contex | favorite | on: <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">{{ comment.New.title }}</a>
+                                | contex | on: <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">{{ comment.New.title }}</a>
                                 <br>
                             </span>
                         </td>

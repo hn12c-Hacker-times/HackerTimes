@@ -308,41 +308,36 @@ def item_detail(request, news_id):
     comments = Comments.objects.filter(New=news).order_by('-published_date')
     user_data = request.session.get('user_data')
     is_favorited = False
+    user_email = user_data.get('email') if user_data else None
 
-    # Check if the user is logged in and if they have favorited the news
+    # Annotate vote status for the news item
+    if user_email:
+        news.user_has_voted = news.voters.filter(email=user_email).exists()
+
+    # Check if the user has favorited the news
     if user_data:
-        user_email = user_data.get('email')
-        if user_email:
-            user = CustomUser.objects.filter(email=user_email).first()
-            if user:
-                # Check if the news is already favorited by the user
-                is_favorited = news in user.favorite_news.all()
-
-    # Handle comment creation if the user is logged in and POST data is provided
-    if request.method == "POST" and 'comment' in request.POST:
+        user = CustomUser.objects.filter(email=user_email).first()
+        if user:
+            is_favorited = news in user.favorite_news.all()
+    
+    # Handle comment creation if POST data is provided
+    if request.method == "POST":
         if not user_data:
             return redirect('news:login')
-
+                
         text = request.POST.get('text')
         parent_id = request.POST.get('parent_id')
-
         if text:
-            author = CustomUser.objects.get(email=user_data['email'])
+            author = CustomUser.objects.get(email=user_email)
             parent = get_object_or_404(Comments, id=parent_id) if parent_id else None
-
-            Comments.objects.create(
-                text=text,
-                author=author,
-                New=news,
-                parent=parent
-            )
+            Comments.objects.create(text=text, author=author, New=news, parent=parent)
             return redirect('news:item_detail', news_id=news_id)
 
     return render(request, 'item_detail.html', {
         'item': news,
         'comments': comments,
         'is_favorited': is_favorited,
-        'user_data': user_data
+        'user_data': user_data,
     })
 
     
