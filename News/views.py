@@ -139,20 +139,22 @@ class FavoriteNewsView(ListView):
     context_object_name = 'favorite_news'
 
     def get_queryset(self):
-        user_data = self.request.session.get('user_data')
+        username = self.request.GET.get('id')
         
-        # Redirect to login if user is not logged in
-        if not user_data:
-            return redirect('news:login')
+        # Get the user based on the provided username in the query parameter
+        user = get_object_or_404(CustomUser, username=username)
         
-        user_email = user_data.get('email')
-        user = get_object_or_404(CustomUser, email=user_email)
-
-        # Retrieve favorite news items for the user
+        # Retrieve favorite news items for the specified user
         favorite_news = user.favorite_news.all().order_by('-published_date')
-
+        
         # Annotate favorite news items with voting status
+        user_email = user.email  # Using the favorite item's owner's email for annotation
         return annotate_user_votes(favorite_news, user_email)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['viewing_user'] = self.request.GET.get('id')
+        return context
         
 class FavoriteCommentsView(ListView):
     model = Comments
@@ -160,20 +162,22 @@ class FavoriteCommentsView(ListView):
     context_object_name = 'favorite_comments'
 
     def get_queryset(self):
-        user_data = self.request.session.get('user_data')
+        username = self.request.GET.get('id')
         
-        # Redirect to login if user is not logged in
-        if not user_data:
-            return redirect('news:login')
+        # Get the user based on the provided username in the query parameter
+        user = get_object_or_404(CustomUser, username=username)
         
-        user_email = user_data.get('email')
-        user = get_object_or_404(CustomUser, email=user_email)
-
-        # Retrieve favorite comments for the user
+        # Retrieve favorite comments for the specified user
         favorite_comments = user.favorite_comments.all().order_by('-published_date')
-
+        
         # Annotate favorite comments with voting status
+        user_email = user.email  # Using the favorite item's owner's email for annotation
         return annotate_comment_votes(favorite_comments, user_email)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['viewing_user'] = self.request.GET.get('id')
+        return context
     
 class VotedNewsView(ListView):
     model = News
@@ -672,7 +676,7 @@ def favorite_comment(request, comment_id):
                 print(f"Current favorite comments for {user.email}: {favorites}")
             
             # Redirect back to the same page to show updated status
-            return redirect('news:favoriteComments_list')
+            return redirect(f"/favorite_comments/?id={user.username}")
 
     return login(request)
 

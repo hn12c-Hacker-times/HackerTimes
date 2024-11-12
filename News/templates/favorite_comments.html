@@ -5,13 +5,13 @@
 {% block content %}
     <!-- Navigation Bar for Favorites -->
     <div style="margin-bottom: 15px; padding-left: 40px;">
-        <a href="{% url 'news:favoriteNews_list' %}" style="color: #828282;">submissions</a> |
-        <a href="{% url 'news:favoriteComments_list' %}" style="color: #828282;">comments</a>
+        <a href="{% url 'news:favoriteNews_list' %}?id={{ viewing_user }}" style="color: #828282;">submissions</a> |
+        <a href="{% url 'news:favoriteComments_list' %}?id={{ viewing_user }}" style="color: #828282;">comments</a>
     </div>
     <div style="all: revert; list-style-type: none; margin: 0; content: none;">
         {% load static %}
 
-        {% if request.session.user_data %}
+        {% if viewing_user %}
             {% for comment in favorite_comments %}
                 <li class="commentListClass">
                     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
@@ -54,13 +54,17 @@
                 </li>
             {% empty %}
                 <li style="margin-left: 40px; color: #828282;">
-                    To add a comment here, click on its timestamp to go to its page, then click 'favorite' at the top.
+                    {% if viewing_user == request.session.user_data.given_name %}
+                        To add a comment here, click on its timestamp to go to its page, then click 'favorite' at the top.
+                    {% else %}
+                        The user has no favorite comments.
+                    {% endif %}
                 </li>
             {% endfor %}
         {% else %}
             <li style="margin-left: 40px; color: #828282;">
-                Log in to mark comments as favorites.
+                No user specified. Please provide a valid username to view favorites.
             </li>
         {% endif %}
-        </div>
+    </div>
 {% endblock %}

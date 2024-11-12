@@ -5,13 +5,13 @@
 {% block content %}
     <!-- Navigation Bar for Favorites -->
     <div style="margin-bottom: 15px; padding-left: 40px;">
-        <a href="{% url 'news:favoriteNews_list' %}" style="color: #828282;">submissions</a> |
-        <a href="{% url 'news:favoriteComments_list' %}" style="color: #828282;">comments</a>
+        <a href="{% url 'news:favoriteNews_list' %}?id={{ viewing_user }}" style="color: #828282;">submissions</a> |
+        <a href="{% url 'news:favoriteComments_list' %}?id={{ viewing_user }}" style="color: #828282;">comments</a>
     </div>
     <div>
         {% load static %}
 
-        {% if request.session.user_data %}
+        {% if viewing_user %}
             <ol type="1">
                 {% for new in favorite_news %}
                     <li>
@@ -20,7 +20,7 @@
                                 <tr>
                                     <td class="titleline">
                                         <button class="vote-btn" data-news-id="{{ new.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
-                                            {% if not new.user_has_voted and request.session.user_data.given_name != new.author.username %}
+                                            {% if not new.user_has_voted and viewing_user != new.author.username %}
                                                 <a href="{% url 'news:vote' new.id %}">
                                                     <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
                                                 </a>
@@ -58,7 +58,7 @@
                                                     {% endif %}
                                                 {% endwith %}
                                             </a>
-                                            {% if request.session.user_data.given_name == new.author.username %}
+                                            {% if viewing_user == new.author.username %}
                                                 | <a href="{% url 'news:edit_news' new.id %}">edit</a>
                                                 | <a href="{% url 'news:delete_news' new.id %}">delete</a>
                                             {% endif %}
@@ -70,14 +70,18 @@
                         </table>
                     </li>
                 {% empty %}
-                    <div style="margin-left: 40px; color: #828282;">
-                        To add a story here, click on its timestamp to go to its page, then click 'favorite' at the top.
+                    <div style="color: #828282;">
+                        {% if viewing_user == request.session.user_data.given_name %}
+                            To add a comment here, click on its timestamp to go to its page, then click 'favorite' at the top.
+                        {% else %}
+                            The user has no favorite comments.
+                        {% endif %}
                     </div>
                 {% endfor %}
             </ol>
         {% else %}
-            <div style="margin-left: 40px; color: #828282;">
-                Log in to mark news as favorites.
+            <div style="color: #828282;">
+                No user specified. Please provide a valid username to view favorites.
             </div>
         {% endif %}
     </div>
