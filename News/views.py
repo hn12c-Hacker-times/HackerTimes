@@ -102,19 +102,10 @@ class CommentListView(ListView):
             queryset = Comments.objects.filter(author__username=username).order_by('-published_date')
             if not queryset.exists():
                 return HttpResponse(status=404)  # No comments found
-            return self.annotate_comment_votes(queryset, user_email)
+            return annotate_comment_votes(queryset, user_email)
         
         queryset = Comments.objects.order_by('-published_date')
-        return self.annotate_comment_votes(queryset, user_email)
-
-    def annotate_comment_votes(self, queryset, user_email):
-        if user_email:
-            for comment in queryset:
-                comment.user_has_voted = comment.voters.filter(email=user_email).exists()
-        else:
-            for comment in queryset:
-                comment.user_has_voted = False
-        return queryset
+        return annotate_comment_votes(queryset, user_email)
 
 class SearchListView(ListView):
     model = News  # We are searching through the News model
@@ -141,6 +132,48 @@ class SearchListView(ListView):
             return annotate_user_votes(queryset, user_email)
         else:
             return News.objects.none()
+        
+class FavoriteNewsView(ListView):
+    model = News
+    template_name = 'favorite_news.html'
+    context_object_name = 'favorite_news'
+
+    def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        
+        # Redirect to login if user is not logged in
+        if not user_data:
+            return redirect('news:login')
+        
+        user_email = user_data.get('email')
+        user = get_object_or_404(CustomUser, email=user_email)
+
+        # Retrieve favorite news items for the user
+        favorite_news = user.favorite_news.all().order_by('-published_date')
+
+        # Annotate favorite news items with voting status
+        return annotate_user_votes(favorite_news, user_email)
+        
+class FavoriteCommentsView(ListView):
+    model = Comments
+    template_name = 'favorite_comments.html'
+    context_object_name = 'favorite_comments'
+
+    def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        
+        # Redirect to login if user is not logged in
+        if not user_data:
+            return redirect('news:login')
+        
+        user_email = user_data.get('email')
+        user = get_object_or_404(CustomUser, email=user_email)
+
+        # Retrieve favorite comments for the user
+        favorite_comments = user.favorite_comments.all().order_by('-published_date')
+
+        # Annotate favorite comments with voting status
+        return annotate_comment_votes(favorite_comments, user_email)
 
 def ask_detail(request, ask_id):
     ask = get_object_or_404(News, id=ask_id)
@@ -310,21 +343,23 @@ def item_detail(request, news_id):
     is_favorited = False
     user_email = user_data.get('email') if user_data else None
 
-    # Annotate vote status for the news item
+    # Annotate vote status for the news and comments item
     if user_email:
         news.user_has_voted = news.voters.filter(email=user_email).exists()
+        comments = annotate_comment_votes(comments, user_email)
 
     # Check if the user has favorited the news
     if user_data:
         user = CustomUser.objects.filter(email=user_email).first()
         if user:
             is_favorited = news in user.favorite_news.all()
-    
+
     # Handle comment creation if POST data is provided
     if request.method == "POST":
         if not user_data:
             return redirect('news:login')
-                
+        
+        # Process a new comment
         text = request.POST.get('text')
         parent_id = request.POST.get('parent_id')
         if text:
@@ -340,18 +375,46 @@ def item_detail(request, news_id):
         'user_data': user_data,
     })
 
+# Helper function to annotate comment votes
+def annotate_comment_votes(comments, user_email):
+    if user_email:
+        for comment in comments:
+            comment.user_has_voted = comment.voters.filter(email=user_email).exists()
+    else:
+        for comment in comments:
+            comment.user_has_voted = False
+    return comments
+
     
 # Funcionalidad parent
 def comment_context(request, news_id, comment_id):
     news = get_object_or_404(News, id=news_id)
     parent_comment = get_object_or_404(Comments, id=comment_id)
     replies = Comments.objects.filter(parent=parent_comment).order_by('-published_date')
+    user_data = request.session.get('user_data')
+    user_email = user_data.get('email') if user_data else None
+
+    is_favorited = False
+
+    # Annotate vote status for the parent comment and replies
+    if user_email:
+        # Annotate the parent comment
+        parent_comment.user_has_voted = parent_comment.voters.filter(email=user_email).exists()
+        # Annotate replies
+        replies = annotate_comment_votes(replies, user_email)
+
+    # Check if the user has favorited the comment
+    if user_data:
+        user = CustomUser.objects.filter(email=user_email).first()
+        if user:
+            is_favorited = parent_comment in user.favorite_comments.all()
     
     return render(request, 'comment_context.html', {
         'news': news,
         'parent_comment': parent_comment,
         'replies': replies,
-        'user_data': request.session.get('user_data')
+        'is_favorited': is_favorited,
+        'user_data': user_data
     })
 
 def edit_comment(request, comment_id):
@@ -558,7 +621,7 @@ def favorite_comment(request, comment_id):
                 print(f"Current favorite comments for {user.email}: {favorites}")
             
             # Redirect back to the same page to show updated status
-            return redirect('news:item_detail', comment_id=comment_id)
+            return redirect('news:favoriteComments_list')
 
     return login(request)
 

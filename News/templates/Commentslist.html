@@ -3,7 +3,7 @@
 {% block title %}Newest Comments - HackerTimes{% endblock %}
 
 {% block content %}
-    <ul style="all: revert; list-style-type: none;  margin: 0; padding-left: 40px; content: none;">
+    <ul style="all: revert; list-style-type: none; margin: 0; padding-left: 40px;">
         <style>
             li {
                 list-style-type: none; /* This will remove bullets from all <li> */
@@ -14,21 +14,23 @@
             }
         </style>
         {% for comment in comments_list %}
-        <li class="comentListClass">
+        <li class="commentListClass">
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
                 <tbody>
                     <tr>
                         <td style="padding: 0; margin: 0; border: none; display: inline-block;">
                             <button class="vote-btn" data-comment-id="{{ comment.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
-                                {% if not comment.user_has_voted and request.session.user_data.given_name != comment.author.username%}
-                                <a href="{% url 'news:vote_comment' comment.id %}">
+                                {% if not comment.user_has_voted and request.session.user_data.given_name != comment.author.username %}
+                                    <a href="{% url 'news:vote_comment' comment.id %}">
                                         <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
                                     </a>   
                                 {% endif %}
                             </button>
                             <span class="comhead" style="padding: 0; margin: 0;">
                                 <a href="/user/{{ comment.author.username }}/" style="color:#828282">{{ comment.author.username }}</a>
-                                {{ comment.published_date|timesince }} ago  |
+                                <a href="{% url 'news:comment_context' comment.New.id comment.id %}" style="color: #828282;">
+                                    {{ comment.published_date|timesince }} ago
+                                </a> |
                                 {% if comment.user_has_voted %}
                                     <a href="{% url 'news:vote_comment' comment.id %}">unvote</a> |
                                 {% endif %}
@@ -37,25 +39,24 @@
                                 {% else %}
                                     <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">parent</a>
                                 {% endif %} 
-                                | contex | on: <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">{{ comment.New.title }}</a>
+                                | context | on: <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">{{ comment.New.title }}</a>
                                 <br>
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <td class="titleline" style="padding: 0; margin: 0; border: none;">
-                        <span class="titleline" style="padding: 0; margin: 0; color:black;">
-                            &nbsp&nbsp&nbsp  {{ comment.text }}
-                        </span>
-                    </td>
+                            <span class="titleline" style="padding: 0; margin: 0; color:black;">
+                                &nbsp;&nbsp;&nbsp; {{ comment.text }}
+                            </span>
+                        </td>
                     </tr>
                     <tr class="spacer" style="height:15px"></tr>
                 </tbody>
             </table>
         </li>
-    
-    {% empty %}
-        <li>No comments available.</li>
-    {% endfor %}
+        {% empty %}
+            <li>No comments available.</li>
+        {% endfor %}
     </ul>
 {% endblock %}
