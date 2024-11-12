@@ -174,6 +174,50 @@ class FavoriteCommentsView(ListView):
 
         # Annotate favorite comments with voting status
         return annotate_comment_votes(favorite_comments, user_email)
+    
+class VotedNewsView(ListView):
+    model = News
+    template_name = 'voted_news.html'
+    context_object_name = 'voted_news'
+
+    def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        
+        # Redirect to login if user is not logged in
+        if not user_data:
+            return redirect('news:login')
+        
+        user_email = user_data.get('email')
+        user = get_object_or_404(CustomUser, email=user_email)
+        if user:
+            # Use the related_name to access voted news through the user
+            queryset = user.voted_news.all().order_by('-published_date')
+            # Annotate the queryset with user voting data
+            return annotate_user_votes(queryset, user_email)
+        else:
+            return News.objects.none()  # Return an empty queryset if the user is not authenticated
+
+class VotedCommentsView(ListView):
+    model = Comments
+    template_name = 'voted_comments.html'
+    context_object_name = 'voted_comments'
+
+    def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        
+        # Redirect to login if user is not logged in
+        if not user_data:
+            return redirect('news:login')
+        
+        user_email = user_data.get('email')
+        user = get_object_or_404(CustomUser, email=user_email)
+        if user:
+            # Use the related_name to access voted news through the user
+            queryset = user.voted_comments.all().order_by('-published_date')
+            return annotate_comment_votes(queryset, user_email)
+        else:
+            return Comments.objects.none()  # Return an empty queryset if the user is not authenticated
+
 
 def ask_detail(request, ask_id):
     ask = get_object_or_404(News, id=ask_id)

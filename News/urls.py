@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path
 from django.conf.urls.static import static
-from .views import FavoriteCommentsView, FavoriteNewsView, NewListView
+from .views import FavoriteCommentsView, FavoriteNewsView, NewListView, VotedCommentsView, VotedNewsView
 from .views import NewestListView
 from .views import CommentListView
 from .views import SearchListView
@@ -39,5 +39,7 @@ urlpatterns = [
     path('favorite_comment/<int:comment_id>/', views.favorite_comment, name='favorite_comment'),
     path('favorite_news/', FavoriteNewsView.as_view(), name='favoriteNews_list'),
     path('favorite_comments/', FavoriteCommentsView.as_view(), name='favoriteComments_list'),
+    path('voted_news/', VotedNewsView.as_view(), name='votedNews_list'),
+    path('voted_comments/', VotedCommentsView.as_view(), name='votedComments_list'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
