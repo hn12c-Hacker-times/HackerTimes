@@ -46,7 +46,7 @@
                                     <td style="text-align:right;padding-right:4px;">
                                         {% if request.session.user_data %}
                                             <span class="pagetop">
-                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> |  <!-- Muestra el nombre de usuario -->
+                                                <a href="{% url 'news:user_profile' %}">{{ request.session.user_data.name }}</a> ({{ request.session.user_data.karma }}) |  <!-- Muestra el nombre de usuario -->
                                                 <a href="{% url 'news:logout' %}">logout</a>
                                             </span>
                                         {% else %}

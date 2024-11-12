@@ -50,6 +50,12 @@
                                         <a href="/?id={{user.username }}"><u>submissions</u></a>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:favoriteNews_list' %}?id={{ user.username }}" style="color:#000000;"><u>favorites</u></a>
+                                    </td>
+                                </tr>
                             </tbody>
                             {%endif%}
                         </table>
