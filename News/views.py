@@ -31,29 +31,44 @@ class NewListView(ListView):
 
         if user_data:
             user = CustomUser.objects.get(email=user_data['email'])
-            print(f"User data: {user_data}")  # Ver el usuario y su información
+            #print(f"User data: {user_data}")  # Ver el usuario y su información
 
             # Obtener las noticias ocultas de ese usuario
             hidden_news_ids = HiddenNews.objects.filter(user=user).values_list('news_id', flat=True)
-            print(f"Hidden news IDs: {list(hidden_news_ids)}")  # Ver los IDs de noticias ocultas
+            #print(f"Hidden news IDs: {list(hidden_news_ids)}")  # Ver los IDs de noticias ocultas
 
             # Si hay un nombre de usuario, mostrar solo las noticias de ese usuario
             if username:
                 author = CustomUser.objects.filter(username=username).first()
                 if author:
                     queryset = News.objects.filter(author=author, is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-published_date')
-                    print(f"Query for author '{username}': {queryset}")  # Ver la consulta para el autor
+                    #print(f"Query for author '{username}': {queryset}")  # Ver la consulta para el autor
                     if not queryset.exists():
                         return HttpResponse(status=404)
                     return annotate_user_votes(queryset, user_email)
             
             # Excluir las noticias ocultas para el usuario actual y ordenarlas por puntos
-            queryset = News.objects.filter(is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-points')
-            return annotate_user_votes(queryset, user_email)
+            queryset = News.objects.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
+
+            # Calculate relevance for each item and sort manually
+            news_list = list(queryset)
+            news_list.sort(
+                key=lambda news: calculate_relevance(news.points, news.published_date),
+                reverse=True  # Ensures descending order
+            )
+
+            return annotate_user_votes(news_list, user_email)
 
         # Si el usuario no está logueado, solo mostrar las noticias no ocultas
-        queryset = News.objects.filter(is_hidden=False).order_by('-published_date')
-        return queryset
+        queryset = News.objects.filter(is_hidden=False)
+
+        # Calculate relevance for each item and sort manually
+        news_list = list(queryset)
+        news_list.sort(
+            key=lambda news: calculate_relevance(news.points, news.published_date),
+            reverse=True  # Ensures descending order
+        )
+        return news_list
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -85,7 +100,15 @@ class AskListView(ListView):
         user_email = user_data.get('email') if user_data else None
 
         queryset = News.objects.filter(url='').order_by('-published_date')
-        return annotate_user_votes(queryset, user_email)
+
+        # Calculate relevance for each item and sort manually
+        news_list = list(queryset)
+        news_list.sort(
+            key=lambda news: calculate_relevance(news.points, news.published_date),
+            reverse=True  # Ensures descending order
+        )
+
+        return annotate_user_votes(news_list, user_email)
 
 # Vista de la lista de comments
 class CommentListView(ListView):
@@ -286,6 +309,13 @@ class UserView(View):
         else:
             #Manejo de errores, podrías incluir más información
             return HttpResponse(status=400)
+
+def calculate_relevance(points, published_date):
+    # Calculate the time difference in hours
+    hours_since_posted = (timezone.now() - published_date).total_seconds() / 3600
+    # Relevance formula: adjust as needed to fine-tune the balance
+    relevance_score = ((points + 1) / (1 + hours_since_posted))
+    return relevance_score
 
 def annotate_user_votes(news_list, user_email):
     if user_email:
