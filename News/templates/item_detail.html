@@ -27,15 +27,15 @@
       <td class="subtext">
         <span class="subtext" style="margin-left: 15px;">
           {{ item.points }} points by <a href="{% url 'news:user_profile' %}{{ item.author.username }}/">{{ item.author.username }}</a>
-          {{ item.published_date|timesince }} ago
+          {{ item.published_date|timesince }} ago |
           {% if item.user_has_voted %}
-            | <a href="{% url 'news:vote' item.id %}">unvote</a> |
+            <a href="{% url 'news:vote' item.id %}">unvote</a> |
           {% endif %}
           {%if request.session.user_data.given_name != item.author.username%}
             {% if is_favorited %}
-              | <a href="{% url 'news:favorite_news' item.id %}">unfavorite</a> |
+              <a href="{% url 'news:favorite_news' item.id %}">unfavorite</a> |
             {% else %}
-              | <a href="{% url 'news:favorite_news' item.id %}">favorite</a> |
+              <a href="{% url 'news:favorite_news' item.id %}">favorite</a> |
             {% endif %}
           {% endif %}
           {% if request.session.user_data.given_name == item.author.username %}
@@ -76,9 +76,9 @@
       <!-- Comentario principal -->
       <button class="vote-btn" data-comment-id="{{ comment.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
         {% if not comment.user_has_voted and request.session.user_data.given_name != comment.author.username%}
-        <a href="{% url 'news:vote_comment' comment.id %}">
-                <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
-            </a>   
+          <a href="{% url 'news:vote_comment' comment.id %}">
+            <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+          </a>   
         {% endif %}
       </button>
       <span class="comhead" style="color: #828282; margin-bottom: 6px;">
