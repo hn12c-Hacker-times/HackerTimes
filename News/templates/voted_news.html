@@ -37,7 +37,6 @@
                                 <tr>
                                     <td class="subtext">
                                         <span class="subtext">
-                                            {{ new.points }} points by 
                                             {{ new.points }} points by <a href="{% url 'news:user_profile' %}{{ new.author.username }}/"> {{ new.author.username }}</a>
                                             <a href="{% url 'news:item_detail' new.id %}"> {{ new.published_date|timesince }} ago</a> |
                                             {% if new.user_has_voted %}
