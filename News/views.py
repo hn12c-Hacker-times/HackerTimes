@@ -555,7 +555,7 @@ def login(request):
                         max_visit=20,
                         min_away=180,
                         delay=0
-                    );
+                    )
                 request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
                 request.session['user_data']['karma'] = user.karma  # Add karma to user_data
                 return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias

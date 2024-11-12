@@ -56,14 +56,17 @@
 </table>
 
 {% if user_data %}
-<form method="post" style="margin: 20px 0 0 40px">
-  {% csrf_token %}
-  <textarea name="text" rows="6" cols="60" required></textarea>
-  <br><br>
-  <input type="submit" value="add comment">
-</form>
+  <form method="post" style="margin: 20px 0 0 40px">
+    {% csrf_token %}
+    <textarea name="text" rows="6" cols="60" required></textarea>
+    <br><br>
+    <input type="submit" value="add comment">
+  </form>
 {% else %}
-<p style="margin-left: 40px"><a href="{% url 'news:login' %}">Login</a> to comment.</p>
+  <p style="margin-left: 40px">
+    <a href="{% url 'news:login' %}" style="text-decoration: underline; color: red;">Login</a> 
+    <span style="color: black;">to comment.</span>
+  </p>
 {% endif %}
 
 {% if comments %}
