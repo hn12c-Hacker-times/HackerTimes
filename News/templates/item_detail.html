@@ -27,15 +27,15 @@
       <td class="subtext">
         <span class="subtext" style="margin-left: 15px;">
           {{ item.points }} points by <a href="{% url 'news:user_profile' %}{{ item.author.username }}/">{{ item.author.username }}</a>
-          {{ item.published_date|timesince }} ago |
+          {{ item.published_date|timesince }} ago
           {% if item.user_has_voted %}
-            <a href="{% url 'news:vote' item.id %}">unvote</a> |
+            | <a href="{% url 'news:vote' item.id %}">unvote</a>
           {% endif %}
           {%if request.session.user_data.given_name != item.author.username%}
             {% if is_favorited %}
-              <a href="{% url 'news:favorite_news' item.id %}">unfavorite</a> |
+              | <a href="{% url 'news:favorite_news' item.id %}">unfavorite</a>
             {% else %}
-              <a href="{% url 'news:favorite_news' item.id %}">favorite</a> |
+              | <a href="{% url 'news:favorite_news' item.id %}">favorite</a>
             {% endif %}
           {% endif %}
           {% if request.session.user_data.given_name == item.author.username %}
@@ -83,13 +83,13 @@
       </button>
       <span class="comhead" style="color: #828282; margin-bottom: 6px;">
         <a href="{% url 'news:user_profile' %}{{ comment.author.username }}/" style="color: #828282">{{ comment.author.username }}</a>
-        {{ comment.published_date|timesince }} ago |
+        {{ comment.published_date|timesince }} ago
         {% if comment.user_has_voted %}
-          <a href="{% url 'news:vote_comment' comment.id %}">unvote</a> |
+          | <a href="{% url 'news:vote_comment' comment.id %}">unvote</a>
         {% endif %}
         {% if request.session.user_data.given_name == comment.author.username %}
-          <a href="{% url 'news:edit_comment' comment.id %}">edit</a> |
-          <a href="{% url 'news:delete_comment' comment.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
+          | <a href="{% url 'news:edit_comment' comment.id %}">edit</a>
+          | <a href="{% url 'news:delete_comment' comment.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
         {% endif %}
       </span>
       <div id="comment-text-{{ comment.id }}" class="comment-text" style="margin-bottom: 15px; margin-left: 15px; color: #000000;">
@@ -124,14 +124,14 @@
             </button>
             <span class="comhead" style="color: #828282; margin-bottom: 6px;">
               <a href=" {{ reply.author.username }}/" style="color: #828282">{{ reply.author.username }}</a>
-              {{ reply.published_date|timesince }} ago |
+              {{ reply.published_date|timesince }} ago
               {% if reply.user_has_voted %}
-                <a href="{% url 'news:vote_comment' reply.id %}">unvote</a> |
+                | <a href="{% url 'news:vote_comment' reply.id %}">unvote</a>
               {% endif %}
-              <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a> |
+                | <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a>
               {% if request.session.user_data.given_name == reply.author.username %}
-                <a href="{% url 'news:edit_comment' reply.id %}">edit</a> |
-                <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
+                | <a href="{% url 'news:edit_comment' reply.id %}">edit</a>
+                | <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
               {% endif %}
             </span>
             <div id="comment-text-{{ reply.id }}" class="comment-text" style="margin-bottom: 15px; margin-left: 15px; color: #000000;">
