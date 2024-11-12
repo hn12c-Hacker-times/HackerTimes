@@ -62,6 +62,21 @@
                                     </tr>
                                 {% endif %}
 
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:votedNews_list' %}" style="color:#000000;"><u>upvoted submissions</u></a> /
+                                        <a href="{% url 'news:votedComments_list' %}" style="color:#000000;"><u>upvoted comments</u></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:favoriteNews_list' %}?id={{ user_profile.username }}" style="color:#000000;"><u>favorite submissions</u></a> /
+                                        <a href="{% url 'news:favoriteComments_list' %}?id={{ user_profile.username }}" style="color:#000000;"><u>favorite comments</u></a> (publicly visible)
+                                    </td>
+                                </tr>
+
                                 <tr class="spacer" style="height:20px"></tr>
 
                                 <tr>
