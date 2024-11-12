@@ -523,6 +523,7 @@ def login(request):
                         delay=0
                     );
                 request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
+                request.session['user_data']['karma'] = user.karma  # Add karma to user_data
                 return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias
             except ValueError:
                 return HttpResponse(status=403)  # Token no válido
@@ -566,31 +567,37 @@ class CustomUserDetailView(DetailView):
 def vote(request, news_id):
     user_data = request.session.get('user_data')
     
-    if user_data:
-        email = user_data.get('email')  # Retrieve the email from the session data
-        if email:
-            try:
-                user = CustomUser.objects.get(email=email)
-            except CustomUser.DoesNotExist:
-                return HttpResponse("User not found", status=404)
+    if not user_data:
+        return login(request)
+    
+    user_email = user_data.get('email')
+    user = get_object_or_404(CustomUser, email=user_email)
 
-            news = get_object_or_404(News, id=news_id)
-            
-            if user in news.voters.all():
-                # Unvote logic
-                news.voters.remove(user)
-                news.points -= 1  # Decrease the vote count
-                news.save()
-            else:
-                # Vote logic
-                news.voters.add(user)
-                news.points += 1  # Increase the vote count
-                news.save()
-            
-            print(f"User {user.email} has voted/unvoted")
-            return redirect('news:news_list')  # Redirect to a relevant page after voting
+    # Get the news item
+    news = get_object_or_404(News, id=news_id)
+    author = news.author  # The author of the news item
 
-    return login(request)
+    # Check if the user has already voted on this news item
+    if user in news.voters.all():
+        # Unvote logic: Remove the vote and decrease author's karma
+        news.voters.remove(user)
+        news.points -= 1
+        news.save()
+
+        # Update author's karma
+        author.karma = max(0, author.karma - 1)  # Ensure karma does not go below 0
+        author.save()
+    else:
+        # Vote logic: Add the vote and increase author's karma
+        news.voters.add(user)
+        news.points += 1
+        news.save()
+
+        # Update author's karma
+        author.karma += 1
+        author.save()
+    
+    return redirect('news:news_list')  # Redirect to a relevant page after voting
 
 def vote_comment(request, comment_id):
     user_data = request.session.get('user_data')
