@@ -9,11 +9,11 @@
     </button>
     <span class="comhead" style="color: #828282; margin-bottom: 6px;">
         <a href="{% url 'news:user_profile' %}{{ reply.author.username }}/" style="color: #828282">{{ reply.author.username }}</a>
-        {{ reply.published_date|timesince }} ago |
+        {{ reply.published_date|timesince }} ago
         {% if reply.user_has_voted %}
-            | <a href="{% url 'news:vote_comment' reply.id %}">unvote</a> |
+            | <a href="{% url 'news:vote_comment' reply.id %}">unvote</a>
         {% endif %}
-        <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a> |
+            | <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a>
         {% if request.session.user_data.given_name == reply.author.username %}
             | <a href="{% url 'news:edit_comment' reply.id %}">edit</a>
             | <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>

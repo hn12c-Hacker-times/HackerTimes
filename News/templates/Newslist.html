@@ -34,12 +34,12 @@
                                 <td class="subtext">
                                     <span class="subtext">
                                         {{ new.points }} points by <a href="{% url 'news:user_profile' %}{{ new.author.username }}/"> {{ new.author.username }}</a>
-                                        <a href="{% url 'news:item_detail' new.id %}"> {{ new.published_date|timesince }} ago</a> |
+                                        <a href="{% url 'news:item_detail' new.id %}"> {{ new.published_date|timesince }} ago</a>
                                         {% if new.user_has_voted %}
-                                            <a href="{% url 'news:vote' new.id %}">unvote</a> |
+                                           | <a href="{% url 'news:vote' new.id %}">unvote</a>
                                         {% endif %}
-                                        <a href="{% url 'news:hide_submission' new.id %}">hide</a> |
-                                        <a href="{% url 'news:item_detail' new.id %}">
+                                            | <a href="{% url 'news:hide_submission' new.id %}">hide</a>
+                                            | <a href="{% url 'news:item_detail' new.id %}">
                                             {% with comment_count=new.comments_set.count %}
                                                 {% if comment_count == 0 %}
                                                     discuss
