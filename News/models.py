@@ -44,16 +44,6 @@ class Comments(models.Model):
     New = models.ForeignKey(News, on_delete=models.CASCADE)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
     voters = models.ManyToManyField(CustomUser, related_name='voted_comments', blank=True)
-
-class Search(models.Model):
-    text = models.CharField(max_length=1000)
-    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    published_date = models.DateTimeField(auto_now=True)
-    New = models.ForeignKey(News, on_delete=models.CASCADE)
-
-
-    def __str__(self):
-        return self.text
     
 class Thread(models.Model):
     title = models.CharField(max_length=200)
