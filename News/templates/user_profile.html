@@ -36,7 +36,6 @@
                                         <input type="checkbox" name="remove_avatar">&nbsp delete &nbsp&nbsp OR &nbsp&nbsp&nbsp <input type="file" name="avatar_file" style="color:#000000;">
                                     </td>
                                 </tr>
-
                                 <tr>
                                     <td valign="top" style="color:#000000;">user:</td>
                                     <td timestamp="1557689318">
@@ -62,7 +61,7 @@
                                 <tr>
                                     <td></td>
                                     <td>
-                                        <a href="{% url 'news:news_list' %}/{{ user_profile.username }}/" style="color:#000000;"><u>submissions</u></a>
+                                        <a href="{% url 'news:news_list' %}?username={{ user_profile.username }}" style="color:#000000;"><u>submissions</u></a>
                                     </td>
                                 </tr>
 
