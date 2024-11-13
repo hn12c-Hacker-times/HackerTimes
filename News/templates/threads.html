@@ -72,9 +72,16 @@
                                                     {{ reply.text }}
                                                 </div>
 
-                                                <div style="margin-left: 15px;">
-                                                    <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">reply</a>
+                                                <div style="margin: -10px 0 15px 0">
+                                                    <a href="javascript:void(0)" onclick="showReplyForm('{{ reply.id }}')" style=" margin-left: 15px; color: #000000; font-size: 10px;"><u>reply</u></a>
                                                 </div>
+                                                <form id="replyform-{{ reply.id }}" method="post" style="display: none; margin: 10px 0 15px 40px;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="parent_id" value="{{ reply.id }}">
+                                                    <textarea name="text" rows="6" cols="60" required></textarea>
+                                                    <br><br>
+                                                    <input type="submit" value="reply">
+                                                </form>
                                             </div>
                                         {% endfor %}
                                     </div>
@@ -90,4 +97,17 @@
     {% else %}
         <p>No threads available.</p>
     {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        function showReplyForm(commentId) {
+            var form = document.getElementById("replyform-" + commentId);
+            if (form.style.display === "none" || form.style.display === "") {
+                form.style.display = "block";  // Muestra el formulario
+            } else {
+                form.style.display = "none";   // Oculta el formulario
+            }
+        }
+    </script>
 {% endblock %}
