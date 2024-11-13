@@ -34,6 +34,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://hackertimes-0dd5aa346ba7.herokuapp.com'
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/'
 ]
 
 # Application definition
