@@ -60,10 +60,18 @@
                                                 <div class="comment-text" style="margin-left: 15px; color: #000000;">
                                                     {{ reply.text }}
                                                 </div>
+
+                                                <div style="margin-left: 15px;">
+                                                    <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">reply</a>
+                                                </div>
                                             </div>
                                         {% endfor %}
                                     </div>
                                 {% endif %}
+
+                                <div style="margin-left: 15px;">
+                                    <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">reply</a>
+                                </div>
                             </div>
                         {% endfor %}
                     {% else %}
