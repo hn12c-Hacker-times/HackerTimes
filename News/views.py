@@ -12,7 +12,11 @@ from google.auth.transport import requests
 from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
 from django.conf import settings
+<<<<<<< HEAD
 from django.contrib import messages 
+=======
+from django.contrib import messages
+>>>>>>> 927aba71e1be5d02065ed26f99f37f78962edac4
 import os, re, boto3
 import tldextract
 
