@@ -1,1 +1,1 @@
-web: gunicorn HackerTimes.wsgi
+web: gunicorn HackerTimes.wsgi --log-file -
