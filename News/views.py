@@ -1,11 +1,10 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import News, Comments, Search, CustomUser, HiddenNews, Thread
 from .forms import NewsForm, UserForm, AskNewsForm, CommentForm
-from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from datetime import date, datetime
 from google.oauth2 import id_token
@@ -660,6 +659,36 @@ def vote_comment(request, comment_id):
 
     return login(request)
 
+def vote_comment_thread(request, comment_id):
+    print(f"Attempting to vote/unvote for comment {comment_id}")
+    user_data = request.session.get('user_data')
+    
+    if user_data:
+        email = user_data.get('email')  # Retrieve the email from the session data
+        print(f"User email: {email}")
+        if email:
+            try:
+                user = CustomUser.objects.get(email=email)
+            except CustomUser.DoesNotExist:
+                return HttpResponse("User not found", status=404)
+
+            comment = get_object_or_404(Comments, id=comment_id)
+            print(f"Found comment: {comment.text}")
+            if user in comment.voters.all():
+                # Unvote logic
+                comment.voters.remove(user)
+                comment.save()
+                
+            else:
+                # Vote logic
+                comment.voters.add(user)
+                comment.save()
+         
+            print(f"User {user.email} has voted/unvoted on comment {comment_id}")
+            return redirect('news:thread_list')
+
+    return login(request)
+
 def favorite_news(request, news_id):
     user_data = request.session.get('user_data')
     
@@ -765,5 +794,47 @@ def unhide_submission(request, submission_id):
 
 class ThreadListView(ListView):
     model = Thread
-    template_name = 'threads.html' 
+    template_name = 'threads.html'
     context_object_name = 'threads'
+
+    def get_queryset(self):
+        user_data = self.request.session.get('user_data')
+        user_email = user_data.get('email') if user_data else None
+
+        if user_data:
+            user = CustomUser.objects.get(email=user_email)
+            comments = Comments.objects.filter(author=user)
+
+            threads = []
+            for comment in comments:
+                # Verificar si el comentario es una respuesta y asociarlo al thread del comentario padre
+                if comment.parent:
+                    parent_thread = Thread.objects.filter(comments=comment.parent).first()
+                    if parent_thread:
+                        thread = parent_thread  # Usar el thread del comentario padre
+                    else:
+                        thread = Thread.objects.create(title=comment.parent.text)
+                        thread.comments.add(comment.parent)
+                        thread.save()
+                else:
+                    # Si no es una respuesta, crear un nuevo thread para el comentario principal
+                    thread = Thread.objects.filter(comments=comment).first()
+                    if not thread:
+                        thread = Thread.objects.create(title=comment.text)
+                    thread.comments.add(comment)
+                    thread.save()
+
+                # Asegurarse de que el thread se actualiza con la fecha correcta (última publicación)
+                last_comment = comment.replies.last() if comment.replies.exists() else comment
+                thread.updated_at = last_comment.published_date
+                thread.save()
+
+                # Evitar que se agreguen duplicados
+                if thread not in threads:
+                    threads.append(thread)
+
+            # Ordenar los threads por la fecha de la última actualización
+            threads.sort(key=lambda t: t.updated_at, reverse=True)
+            return threads
+
+        return Thread.objects.none()
