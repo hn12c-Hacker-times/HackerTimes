@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import dj_database_url
+import django_heroku
 
 
 load_dotenv()
@@ -34,7 +36,7 @@ SECRET_KEY = 'django-insecure-&r5%tl8g52!zxo8bgn%6d1lb%a76tfx86o$#lokq5vv()2ik9d
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
 
 
@@ -84,12 +86,22 @@ WSGI_APPLICATION = 'HackerTimes.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Si estamos en Heroku, usa PostgreSQL, de lo contrario, usa SQLite
+if 'HEROKU' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(default='postgres://USER:PASSWORD@HOST:PORT/DBNAME')
     }
-}
+else:
+    # Usar SQLite en desarrollo
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# Habilita las configuraciones de Heroku
+django_heroku.settings(locals())
 
 
 # Password validation
