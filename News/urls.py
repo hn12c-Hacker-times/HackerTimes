@@ -35,6 +35,7 @@ urlpatterns = [
     path('threads/', views.ThreadListView.as_view(), name='thread_list'),
     path('vote/<int:news_id>/', views.vote, name='vote'),
     path('vote_comment/<int:comment_id>/', views.vote_comment, name='vote_comment'),
+    path('vote_comment_thread/<int:comment_id>/', views.vote_comment_thread, name='vote_comment_thread'),
     path('favorite/<int:news_id>/', views.favorite_news, name='favorite_news'),
     path('favorite_comment/<int:comment_id>/', views.favorite_comment, name='favorite_comment'),
     path('favorite_news/', FavoriteNewsView.as_view(), name='favoriteNews_list'),
