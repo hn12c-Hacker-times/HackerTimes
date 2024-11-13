@@ -13,7 +13,7 @@ from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
 from django.conf import settings
 from django.contrib import messages 
-import os, re
+import os, re, boto3
 import tldextract
 
 # Create your views here.
@@ -43,7 +43,7 @@ class NewListView(ListView):
                     queryset = News.objects.filter(author=author, is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-published_date')
                     #print(f"Query for author '{username}': {queryset}")  # Ver la consulta para el autor
                     if not queryset.exists():
-                        return HttpResponse(status=404)
+                        return News.objects.none()
                     return annotate_user_votes(queryset, user_email)
             
             # Excluir las noticias ocultas para el usuario actual y ordenarlas por puntos
@@ -291,15 +291,15 @@ class UserView(View):
             
             if 'banner_file' in request.FILES:
                 banner_file = request.FILES['banner_file']
-                #s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-                #s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
+                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+                s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
                 user.banner = f'{settings.AWS_S3_CUSTOM_DOMAIN}/banner/{banner_file.name}'  # Guarda la URL
                 user.save()
 
             if 'avatar_file' in request.FILES:
                 avatar_file = request.FILES['avatar_file']
-                #s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-                #s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
+                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+                s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
                 user.avatar = f'{settings.AWS_S3_CUSTOM_DOMAIN}/avatar/{avatar_file.name}'  # Guarda la URL
                 user.save()
             
