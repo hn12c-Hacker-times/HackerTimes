@@ -3,7 +3,7 @@ from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import News, Comments, Search, CustomUser, HiddenNews, Thread
+from .models import News, Comments, CustomUser, HiddenNews, Thread
 from .forms import NewsForm, UserForm, AskNewsForm, CommentForm
 from django.contrib.auth.models import User
 from datetime import date, datetime
@@ -130,21 +130,16 @@ class CommentListView(ListView):
         return annotate_comment_votes(queryset, user_email)
 
 class SearchListView(ListView):
-    model = News  # We are searching through the News model
-    template_name = 'Searchlist.html'  # The template that displays the search results
-    context_object_name = 'search_list'  # The name of the context passed to the template
+    model = News
+    template_name = 'Searchlist.html'
+    context_object_name = 'search_list'
 
     def get_queryset(self):
-        # Get the search query from the URL parameters
         query = self.request.GET.get('q')
         user_data = self.request.session.get('user_data')
         user_email = user_data.get('email') if user_data else None
 
         if query:
-            # Save the search query in the Search model for tracking (optional)
-            if self.request.user.is_authenticated:
-                Search.objects.create(text=query, author=self.request.user)
-
             # Filter the news items based on the search query
             queryset = News.objects.filter(
                 Q(title__icontains=query)
@@ -152,8 +147,9 @@ class SearchListView(ListView):
 
             # Annotate the queryset with user voting data
             return annotate_user_votes(queryset, user_email)
-        else:
-            return News.objects.none()
+        
+        # Return an empty queryset if there is no search query
+        return News.objects.none()
         
 class FavoriteNewsView(ListView):
     model = News
