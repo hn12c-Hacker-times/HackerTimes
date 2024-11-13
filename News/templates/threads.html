@@ -17,7 +17,7 @@
                                     {% else %}
                                         1 point
                                     {% endif %} 
-                                    by <a href="{% url 'news:user_profile' %}{{ comment.author.username }}" style="color: #828282">{{ comment.author.username }}</a> 
+                                    by <a href="{% url 'news:user_profile' comment.author.username %}" style="color: #828282">{{ comment.author.username }}</a> 
                                     {{ comment.published_date|timesince }} ago |
                                     {% if comment.parent %}
                                         <a href="{% url 'news:comment_context' comment.New.id comment.parent.id %}" style="color:#828282">parent</a>
@@ -45,7 +45,7 @@
                                                             </a>
                                                         {% endif %}
                                                     </button>
-                                                    <a href="{% url 'news:user_profile' %}{{ reply.author.username }}" style="color: #828282">{{ reply.author.username }}</a> |
+                                                    <a href="{% url 'news:user_profile' reply.author.username %}" style="color: #828282">{{ reply.author.username }}</a> |
                                                     {{ reply.published_date|timesince }} ago |
                                                     {% if reply.user_has_voted %}
                                                         <a href="{% url 'news:vote_comment_thread' reply.id %}">unvote</a> |
@@ -55,7 +55,7 @@
                                                     {% else %}
                                                         <a href="{% url 'news:item_detail' comment.New.id %}" style="color:#828282">parent</a>
                                                     {% endif %} 
-                                                    | next [-]
+                                                    | nextttttt [-]
                                                 </span>
                                                 <div class="comment-text" style="margin-left: 15px; color: #000000;">
                                                     {{ reply.text }}
