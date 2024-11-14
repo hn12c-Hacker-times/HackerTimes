@@ -27,7 +27,7 @@
       <td class="subtext">
         <span class="subtext" style="margin-left: 15px;">
           {{ item.points }} points by <a href="{% url 'news:user_profile' %}{{ item.author.username }}/">{{ item.author.username }}</a>
-          {{ item.published_date|timesince }} ago
+          <a href="{% url 'news:item_detail' item.id %}"> {{ item.published_date|timesince }} ago</a>
           {% if item.user_has_voted %}
             | <a href="{% url 'news:vote' item.id %}">unvote</a>
           {% endif %}

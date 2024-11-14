@@ -15,7 +15,7 @@
           {% endif %}
       </button>
         <a href="{% url 'news:user_profile' %}{{ parent_comment.author.username }}/" style="color: #828282">{{ parent_comment.author.username }}</a>
-        {{ parent_comment.published_date|timesince }} ago |
+        <a href="{% url 'news:comment_context' parent_comment.New.id parent_comment.id %}" style="color: #828282;">{{ comment.published_date|timesince }} ago | </a>
         {% if parent_comment.user_has_voted %}
           <a href="{% url 'news:vote_comment' parent_comment.id %}">unvote</a> |
         {% endif %}
@@ -56,7 +56,7 @@
               {% endif %}
             </button>
             <a href="{% url 'news:user_profile' %}{{ reply.author.username }}/" style="color: #828282">{{ reply.author.username }}</a>
-            {{ reply.published_date|timesince }} ago
+            <a href="{% url 'news:comment_context' reply.New.id reply.id %}" style="color: #828282;">{{ comment.published_date|timesince }} ago </a>
             {% if reply.user_has_voted %}
               | <a href="{% url 'news:vote_comment' reply.id %}">unvote</a> |
             {% endif %}

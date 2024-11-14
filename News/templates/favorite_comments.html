@@ -27,7 +27,9 @@
                                     </button>
                                     <span class="comhead" style="padding: 0; margin: 0;">
                                         <a href="/user/{{ comment.author.username }}/" style="color:#828282">{{ comment.author.username }}</a>
-                                        {{ comment.published_date|timesince }} ago |
+                                        <a href="{% url 'news:comment_context' comment.New.id comment.id %}" style="color: #828282;">
+                                            {{ comment.published_date|timesince }} ago
+                                        </a> |
                                         {% if comment.user_has_voted %}
                                             <a href="{% url 'news:vote_comment' comment.id %}">unvote</a> |
                                         {% endif %}

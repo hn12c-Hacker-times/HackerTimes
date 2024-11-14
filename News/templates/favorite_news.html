@@ -44,7 +44,7 @@
                                     <td class="subtext">
                                         <span class="subtext">
                                             {{ new.points }} points by <a href="{% url 'news:user_profile' %}{{ new.author.username }}/"> {{ new.author.username }}</a>
-                                            {{ new.published_date|timesince }} ago |
+                                            <a href="{% url 'news:item_detail' new.id %}"> {{ new.published_date|timesince }} ago</a>
                                             {% if new.user_has_voted %}
                                                 <a href="{% url 'news:vote' new.id %}">unvote</a> |
                                             {% endif %}
@@ -72,7 +72,7 @@
                 {% empty %}
                     <div style="color: #828282;">
                         {% if viewing_user == request.session.user_data.given_name %}
-                            To add a comment here, click on its timestamp to go to its page, then click 'favorite' at the top.
+                            To add a submission here, click on its timestamp to go to its page, then click 'favorite' at the top.
                         {% else %}
                             The user has no favorite submissions.
                         {% endif %}

@@ -47,7 +47,13 @@
                                 <tr>
                                     <td></td>
                                     <td>
-                                        <a href="/?id={{user.username }}"><u>submissions</u></a>
+                                        <a href="{% url 'news:news_list' %}?username={{ user_profile.username }}" style="color:#000000;"><u>submissions</u></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:thread_list' %}" style="color:#000000;"><u>comments</u></a>
                                     </td>
                                 </tr>
                                 <tr>
