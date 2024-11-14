@@ -1,3 +1,11 @@
 #enviroment directory
 .env
+venv/
+*.pyc
+News/__pycache__/*
+HackerTimes/__pycache__/*
+*/__pycache__/
+*/__pycache__
+News/__pycache__
+HackerTimes/__pycache__
 

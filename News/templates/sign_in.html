@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login Page</title>
+    <title>Submit | Hacker News</title>
     <script src="https://accounts.google.com/gsi/client" async></script>
     <style>
         body {
@@ -16,11 +16,12 @@
         }
 
         .container {
-            background-color: white;
+            /*background-color: white;*/
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
+
         }
 
         img {
@@ -50,37 +51,26 @@
             margin-top: 20px;
         }
     </style>
-    <head>
-        {% load static %}
-        <meta name="referrer" content="origin">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
-        <link rel="icon" href="y18.svg">
-        <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
-        <title>Login | Hacker News</title>
-    </head>
+    {% load static %}
+    <meta name="referrer" content="origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
+    <link rel="icon" href="y18.svg">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
+    <title>Login | Hacker News</title>
 </head>
 <body>
 
 <div class="container" style="background-color:#f6f6ef;">
-    {% if request.session.user_data %}
     <div>
-        <p>Hi {{ request.session.user_data.given_name }} 🙂</p>
-        <p>Your email is {{ request.session.user_data.email }}</p>
-        <img src="{{ request.session.user_data.picture }}" alt="User picture">
-        <p>Click here to <a href="/sign-out">Sign out</a></p>
-    </div>
-    {% else %}
-    <div style="background-color:#f6f6ef;">
-        <p class="pagetop" style="background-color:#ff6600;">Hi there 🙂 </p>
-        <p >Click below to sign in with Google</p>
+        <p style="background-color:#ff6600;">Hi there 🙂 </p>
+        <p style="color:#828282">Click below to sign in with Google</p>
         <div id="g_id_onload"
             data-client_id="874622848519-8jml30qgbbb6ldplguu5l8uh5lja1nup.apps.googleusercontent.com"
             data-context="signin"
             data-ux_mode="redirect"
-            data-login_uri="http://localhost:8000/news/submit/"
-            data-itp_support="true"
-            >
+            data-login_uri="https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/"
+            data-itp_support="true">
         </div>
 
         <div class="g_id_signin"
@@ -91,9 +81,10 @@
             data-size="large"
             data-logo_alignment="left"
             >
+            data-logo_alignment="left"
+            >
         </div>
     </div>
-    {% endif %}
 </div>
 
 </body>

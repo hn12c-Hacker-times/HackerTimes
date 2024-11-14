@@ -1,0 +1,42 @@
+{% for reply in comment.replies.all %}
+<div style="margin-left: 40px; margin-top: 10px;">
+    <button class="vote-btn" data-reply-id="{{ reply.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
+        {% if not reply.user_has_voted and request.session.user_data.given_name != reply.author.username%}
+            <a href="{% url 'news:vote_comment' reply.id %}">
+                <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+            </a>
+        {% endif %}
+    </button>
+    <span class="comhead" style="color: #828282; margin-bottom: 6px;">
+        <a href="{% url 'news:user_profile' %}{{ reply.author.username }}/" style="color: #828282">{{ reply.author.username }}</a>
+        {{ reply.published_date|timesince }} ago
+        {% if reply.user_has_voted %}
+            | <a href="{% url 'news:vote_comment' reply.id %}">unvote</a>
+        {% endif %}
+            | <a href="{% url 'news:comment_context' item.id reply.parent.id %}" style="color: #828282">parent</a>
+        {% if request.session.user_data.given_name == reply.author.username %}
+            | <a href="{% url 'news:edit_comment' reply.id %}">edit</a>
+            | <a href="{% url 'news:delete_comment' reply.id %}" onclick="return confirm('Are you sure?')" style="color: #828282">delete</a>
+        {% endif %}
+    </span>
+    <div id="comment-text-{{ reply.id }}" class="comment-text" style="margin-bottom: 15px; margin-left: 15px; color: #000000;">
+        {{ reply.text }}
+    </div>
+    {% if user_data %}
+    <div style="margin: -10px 0 15px 0">
+        <a href="javascript:void(0)" onclick="showReplyForm('{{ reply.id }}')" style=" margin-left: 15px; color: #000000; font-size: 10px;"><u>reply</u></a>
+    </div>
+    <form id="replyform-{{ reply.id }}" method="post" style="display: none; margin: 10px 0 15px 40px;">
+        {% csrf_token %}
+        <input type="hidden" name="parent_id" value="{{ reply.id }}">
+        <textarea name="text" rows="6" cols="60" required></textarea>
+        <br><br>
+        <input type="submit" value="reply">
+    </form>
+    {% endif %}
+    
+    {% with comment=reply template_name="comment_tree.html" %}
+        {% include template_name %}
+    {% endwith %}
+</div>
+{% endfor %}

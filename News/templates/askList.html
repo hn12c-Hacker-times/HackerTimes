@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Ask List - HackerTimes{% endblock %}
+
+{% block content %}
+    <ol>
+        {% for ask in ask_list %}
+        <li>
+            <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; border-spacing: 0;">
+                <tbody>
+                    <tr>
+                        <td class="titleline">
+                            <button class="vote-btn" data-news-id="{{ new.id }}" style="border: none; background: none; padding: 0; cursor: pointer; margin: 3px 2px 6px;">
+                                {% if not ask.user_has_voted and request.session.user_data.given_name != ask.author.username%}
+                                    <a href="{% url 'news:vote' ask.id %}">
+                                        <img src="https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/static/triangle.svg" width="10" height="10" align="left" valign="center" style="border: 0;">
+                                    </a>   
+                                {% endif %}
+                            </button>
+                            <span class="titleline">
+                                <!-- Cambia el enlace para que dirija a la vista de detalle de la ask -->
+                                <a href="{% url 'news:item_detail' ask.id %}" style="color:#000000">{{ ask.title }}</a>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="subtext">
+                            <span class="subtext">
+                                {{ ask.points }} points by <a href="{% url 'news:user_profile' %}{{ ask.author.username }}/">{{ ask.author.username }}</a> 
+                                {{ ask.published_date|timesince }} ago |
+                                {% if ask.user_has_voted %}
+                                    <a href="{% url 'news:vote' ask.id %}">unvote</a> |
+                                {% endif %} 
+                                <a href="example.com"> hide</a> | 
+                                <a href="example.com"> past</a> | 
+                                <a href="{% url 'news:item_detail' ask.id %}">
+                                    {% with comment_count=ask.comments_set.count %}
+                                        {% if comment_count == 0 %}
+                                            discuss
+                                        {% else %}
+                                            {{ comment_count }} comment{{ comment_count|pluralize }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </a>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="spacer" style="height:5px"></tr>
+                </tbody>
+            </table>
+        </li>
+        {% empty %}
+            <li>No asks available.</li>
+        {% endfor %}
+    </ol>
+{% endblock %}

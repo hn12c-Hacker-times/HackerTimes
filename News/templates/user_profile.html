@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}User Profile - Hacker News{% endblock %}
+
+{% block content %}
+    <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="85%" bgcolor="#f6f6ef">
+        <tbody>
+            <tr id="pagespace" title="" style="height:10px"></tr>
+            <tr>
+                <td>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <table border="0" style="table-layout: auto;">
+                            {% load static %}
+                            {% if user_profile %}
+                            <tbody>
+                                <tr class="athing">
+                                    <div>
+                                        <img src="{{ user_profile.banner }}" width="118%" height="150" align="center" valign="center" style="border:0px; margin:-10px 2px 6px;">
+                                        <img src="{{ user_profile.avatar }}" width="130" height="130" style="position: absolute; top: 120px; left: 50%; transform: translateX(-50%); border: 4px solid #FFFFFF; border-radius: 50%; background-color: #f0f0f0;" alt="Perfil">
+                                    </div>
+                                </tr>
+                                <tr class="spacer" style="height:70px"></tr>
+                                
+                                <tr>
+                                    <td valign="top" style="color:#000000;">banner:</td>
+                                    <td valign="top" style="color:#000000;">
+                                        <input type="checkbox" name="remove_banner">&nbsp delete &nbsp&nbsp OR &nbsp&nbsp&nbsp <input type="file" name="banner_file" style="color:#000000;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top" style="color:#000000;">avatar:</td>
+                                    <td style="color:#000000;">
+                                        <input type="checkbox" name="remove_avatar">&nbsp delete &nbsp&nbsp OR &nbsp&nbsp&nbsp <input type="file" name="avatar_file" style="color:#000000;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top" style="color:#000000;">user:</td>
+                                    <td timestamp="1557689318">
+                                        <a href="/user/{{ user_profile.username }}/" class="hnuser">{{ user_profile.username }}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top" style="color:#000000;">created:</td>
+                                    <td style="color:#000000;">
+                                        {{ user_profile.created_at }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td valign="top" style="color:#000000;">karma:</td>
+                                    <td style="color:#000000;">{{ user_profile.karma }}</td>
+                                </tr>
+                                <tr>
+                                    <td valign="top" style="color:#000000;">about:</td>
+                                    <td>
+                                        <textarea name="about" rows="6" cols="100%" wrap="virtual" style="color:#000000;">{{ user_profile.about }}</textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:news_list' %}?username={{ user_profile.username }}" style="color:#000000;"><u>submissions</u></a>
+                                    </td>
+                                </tr>
+
+                                {% if hidden_count > 0 %}
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <a href="{% url 'news:hidden_submissions' %}" style="color:#000000;"><u>hidden</u></a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:votedNews_list' %}" style="color:#000000;"><u>upvoted submissions</u></a> /
+                                        <a href="{% url 'news:votedComments_list' %}" style="color:#000000;"><u>upvoted comments</u></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <a href="{% url 'news:favoriteNews_list' %}?id={{ user_profile.username }}" style="color:#000000;"><u>favorite submissions</u></a> /
+                                        <a href="{% url 'news:favoriteComments_list' %}?id={{ user_profile.username }}" style="color:#000000;"><u>favorite comments</u></a> (publicly visible)
+                                    </td>
+                                </tr>
+
+                                <tr class="spacer" style="height:20px"></tr>
+
+                                <tr>
+                                    <td>
+                                        <input type="submit" value="Update" style="color:#000000;">
+                                    </td>
+                                </tr>
+                            </tbody>
+                            {% endif %}
+                        </table>
+                    </form>
+                    <br>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}
