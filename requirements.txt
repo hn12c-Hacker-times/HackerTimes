@@ -66,3 +66,4 @@ urllib3==2.2.3
 whitenoise==6.8.2
 djangorestframework==3.14.0
 drf-yasg==1.21.7
+django-cors-headers==4.3.1
