@@ -40,6 +40,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Application definition
 INSTALLED_APPS = [
     'News',
+    'API',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,6 +48,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
