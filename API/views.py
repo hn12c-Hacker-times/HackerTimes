@@ -104,7 +104,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         try:
-            # Obtener el autor por API key
+            # Verificar API key
             api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
             if not api_key:
                 return Response(
@@ -122,18 +122,36 @@ class SubmitViewSet(viewsets.ModelViewSet):
 
             # Preparar los datos
             data = request.data.copy()
-            data['author'] = user.email  # Usar email en lugar de id
+            data['author'] = user.email
 
-            if 'url' in data and data['url']:
-                data['urlDomain'] = tldextract.extract(data['url']).domain
+            # Manejar URL y dominio
+            url = data.get('url', '')
+            if url:
+                try:
+                    # Intentar extraer el dominio
+                    extracted = tldextract.extract(url)
+                    data['urlDomain'] = extracted.domain
+                    if not data['urlDomain']:
+                        data['urlDomain'] = ''
+                except Exception as e:
+                    print(f"Error extracting domain: {e}")
+                    data['urlDomain'] = ''
+            else:
+                data['urlDomain'] = ''
+
+            print("Processed data:", data)  # Debug print
 
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
-                serializer.save()
+                news = serializer.save()
+                print(f"Created news with id: {news.id}")  # Debug print
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            print(f"Serializer errors: {serializer.errors}")  # Debug print
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
+            print(f"Error in create: {str(e)}")  # Debug print
             return Response(
                 {"error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
