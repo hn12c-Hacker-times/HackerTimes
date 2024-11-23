@@ -3,13 +3,15 @@ from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
-from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer
+from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, SubmitSerializer
+import tldextract
 
 # Create your views here.
 """
@@ -94,3 +96,44 @@ class NewListView(viewsets.ModelViewSet):
         )
         sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
         return Response(NewsSerializer(sorted_queryset, many=True).data, status=status.HTTP_200_OK)
+
+
+class SubmitViewSet(viewsets.ModelViewSet):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [AllowAny]  # Temporalmente AllowAny para pruebas
+    
+    def create(self, request, *args, **kwargs):
+        print("Recibiendo submit request")  # Debug print
+        user_data = request.session.get('user_data')
+        print(f"User data: {user_data}")  # Debug print
+        
+        if not user_data:
+            return Response(
+                {"error": "Must be logged in to submit"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            author = CustomUser.objects.get(email=user_data['email'])
+            data = request.data.copy()
+            data['author'] = author.id
+            
+            if data.get('url'):
+                data['urlDomain'] = tldextract.extract(data['url']).domain
+            
+            serializer = self.get_serializer(data=data)
+            if serializer.is_valid():
+                news = serializer.save()
+                print(f"Created news with id: {news.id}")  # Debug print
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            print(f"Validation errors: {serializer.errors}")  # Debug print
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            print(f"Error in submit: {str(e)}")  # Debug print
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
