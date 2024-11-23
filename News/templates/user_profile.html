@@ -42,6 +42,14 @@
                                         <a href="/user/{{ user_profile.username }}/" class="hnuser">{{ user_profile.username }}</a>
                                     </td>
                                 </tr>
+
+                                <tr>
+                                    <td valign="top" style="color:#000000;">api key:</td>
+                                    <td style="color:#000000;">
+                                        {{ user_profile.api_key }}
+                                    </td>
+                                </tr>
+
                                 <tr>
                                     <td valign="top" style="color:#000000;">created:</td>
                                     <td style="color:#000000;">
@@ -89,13 +97,6 @@
                                     </td>
                                 </tr>
                                 <tr class="spacer" style="height:20px"></tr>
-
-                                <tr>
-                                    <td valign="top" style="color:#000000;">api key:</td>
-                                    <td style="color:#000000;">
-                                        {{ user_profile.api_key }}
-                                    </td>
-                                </tr>
 
                                 <tr>
                                     <td>
