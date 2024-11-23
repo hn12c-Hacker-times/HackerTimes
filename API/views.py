@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
