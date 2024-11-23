@@ -2,10 +2,37 @@ from rest_framework import serializers
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
 
 class NewsSerializer(serializers.ModelSerializer):
+    # Hacer que author sea de solo lectura
+    author = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+
     class Meta:
         model = News
-        fields = [ 'title', 'url', 'urlDomain', 'text', 'author', 'published_date', 'points', 'is_hidden']
-
+        fields = ['title', 'url', 'urlDomain', 'text', 'author', 'points', 'is_hidden']
+        read_only_fields = ['points', 'is_hidden', 'urlDomain', 'author']  # Incluir author aquí también
+        
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user'):
+            raise serializers.ValidationError("No authenticated user found")
+            
+        validated_data['author'] = request.user
+        
+        # Manejar la URL y el dominio
+        url = validated_data.get('url', '')
+        if url:
+            try:
+                extracted = tldextract.extract(url)
+                validated_data['urlDomain'] = extracted.domain
+            except:
+                validated_data['urlDomain'] = ''
+        else:
+            validated_data['urlDomain'] = ''
+            
+        return super().create(validated_data)
+        
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
