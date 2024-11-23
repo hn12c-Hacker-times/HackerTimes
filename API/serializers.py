@@ -2,19 +2,35 @@ from rest_framework import serializers
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
 
 class NewsSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        queryset=CustomUser.objects.all(),
-        slug_field='email'  # Usamos email en lugar de id
+    # Hacer que author sea de solo lectura
+    author = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
         model = News
         fields = ['title', 'url', 'urlDomain', 'text', 'author', 'points', 'is_hidden']
-        read_only_fields = ['points', 'is_hidden', 'urlDomain']
-
+        read_only_fields = ['points', 'is_hidden', 'urlDomain', 'author']  # Incluir author aquí también
+        
     def create(self, validated_data):
-        if 'url' in validated_data and validated_data['url']:
-            validated_data['urlDomain'] = tldextract.extract(validated_data['url']).domain
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user'):
+            raise serializers.ValidationError("No authenticated user found")
+            
+        validated_data['author'] = request.user
+        
+        # Manejar la URL y el dominio
+        url = validated_data.get('url', '')
+        if url:
+            try:
+                extracted = tldextract.extract(url)
+                validated_data['urlDomain'] = extracted.domain
+            except:
+                validated_data['urlDomain'] = ''
+        else:
+            validated_data['urlDomain'] = ''
+            
         return super().create(validated_data)
         
 class CommentsSerializer(serializers.ModelSerializer):
