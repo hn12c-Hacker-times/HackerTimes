@@ -102,56 +102,49 @@ class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
     
-    def create(self, request, *args, **kwargs):
-        try:
-            # Verificar API key
-            api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
-            if not api_key:
-                return Response(
-                    {"error": "API key is required"}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        # Si hay API key, añadir el usuario al contexto
+        api_key = self.request.META.get('HTTP_X_API_KEY') or self.request.query_params.get('api_key')
+        if api_key:
             try:
                 user = CustomUser.objects.get(api_key=api_key)
+                self.request.user = user
             except CustomUser.DoesNotExist:
-                return Response(
-                    {"error": "Invalid API key"}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+                pass
+        return context
+    
+    def create(self, request, *args, **kwargs):
+        # Verificar API key
+        api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
+        if not api_key:
+            return Response(
+                {"error": "API key is required"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
+        try:
+            user = CustomUser.objects.get(api_key=api_key)
+            request.user = user  # Asignar el usuario a la request
+            
             # Preparar los datos
             data = request.data.copy()
-            data['author'] = user.email
-
-            # Manejar URL y dominio
-            url = data.get('url', '')
-            if url:
-                try:
-                    # Intentar extraer el dominio
-                    extracted = tldextract.extract(url)
-                    data['urlDomain'] = extracted.domain
-                    if not data['urlDomain']:
-                        data['urlDomain'] = ''
-                except Exception as e:
-                    print(f"Error extracting domain: {e}")
-                    data['urlDomain'] = ''
-            else:
-                data['urlDomain'] = ''
-
-            print("Processed data:", data)  # Debug print
-
+            
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
-                news = serializer.save()
-                print(f"Created news with id: {news.id}")  # Debug print
+                serializer.save()  # El autor se asignará automáticamente en el serializer
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
-            print(f"Serializer errors: {serializer.errors}")  # Debug print
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "Invalid API key"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
-            print(f"Error in create: {str(e)}")  # Debug print
             return Response(
                 {"error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
