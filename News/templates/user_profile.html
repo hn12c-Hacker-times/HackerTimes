@@ -88,8 +88,14 @@
                                         <a href="{% url 'news:favoriteComments_list' %}?id={{ user_profile.username }}" style="color:#000000;"><u>favorite comments</u></a> (publicly visible)
                                     </td>
                                 </tr>
-
                                 <tr class="spacer" style="height:20px"></tr>
+
+                                <tr>
+                                    <td valign="top" style="color:#000000;">api key:</td>
+                                    <td style="color:#000000;">
+                                        {{ user_profile.api_key }}
+                                    </td>
+                                </tr>
 
                                 <tr>
                                     <td>
