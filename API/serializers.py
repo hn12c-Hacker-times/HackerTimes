@@ -2,10 +2,21 @@ from rest_framework import serializers
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
 
 class NewsSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        queryset=CustomUser.objects.all(),
+        slug_field='email'  # Usamos email en lugar de id
+    )
+
     class Meta:
         model = News
-        fields = [ 'title', 'url', 'urlDomain', 'text', 'author', 'published_date', 'points', 'is_hidden']
+        fields = ['title', 'url', 'urlDomain', 'text', 'author', 'points', 'is_hidden']
+        read_only_fields = ['points', 'is_hidden', 'urlDomain']
 
+    def create(self, validated_data):
+        if 'url' in validated_data and validated_data['url']:
+            validated_data['urlDomain'] = tldextract.extract(validated_data['url']).domain
+        return super().create(validated_data)
+        
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments

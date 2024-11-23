@@ -101,38 +101,39 @@ class NewListView(viewsets.ModelViewSet):
 class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
-    permission_classes = [AllowAny]  # Temporalmente AllowAny para pruebas
     
     def create(self, request, *args, **kwargs):
-        print("Recibiendo submit request")  # Debug print
-        user_data = request.session.get('user_data')
-        print(f"User data: {user_data}")  # Debug print
-        
-        if not user_data:
-            return Response(
-                {"error": "Must be logged in to submit"}, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
         try:
-            author = CustomUser.objects.get(email=user_data['email'])
+            # Obtener el autor por API key
+            api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
+            if not api_key:
+                return Response(
+                    {"error": "API key is required"}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            try:
+                user = CustomUser.objects.get(api_key=api_key)
+            except CustomUser.DoesNotExist:
+                return Response(
+                    {"error": "Invalid API key"}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            # Preparar los datos
             data = request.data.copy()
-            data['author'] = author.id
-            
-            if data.get('url'):
+            data['author'] = user.email  # Usar email en lugar de id
+
+            if 'url' in data and data['url']:
                 data['urlDomain'] = tldextract.extract(data['url']).domain
-            
+
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
-                news = serializer.save()
-                print(f"Created news with id: {news.id}")  # Debug print
+                serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
-            print(f"Validation errors: {serializer.errors}")  # Debug print
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
-            print(f"Error in submit: {str(e)}")  # Debug print
             return Response(
                 {"error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
