@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import NewListView
+from .views import NewListView, AskViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -17,6 +17,7 @@ app_name='API'
 """
 
 router = DefaultRouter()
+router.register(r'asks', AskViewSet, basename='asks')
 router.register(r'', NewListView, basename='news')
 
 urlpatterns = [

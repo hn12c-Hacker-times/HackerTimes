@@ -30,3 +30,9 @@ class ThreadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thread
         fields = [ 'title', 'comments', 'updated_at']
+
+
+class AskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = News
+        fields = ['title', 'text', 'author', 'published_date', 'points']

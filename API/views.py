@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
-from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer
+from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, AskSerializer
 
 # Create your views here.
 """
@@ -94,3 +94,25 @@ class NewListView(viewsets.ModelViewSet):
         )
         sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
         return Response(NewsSerializer(sorted_queryset, many=True).data, status=status.HTTP_200_OK)
+
+
+class AskViewSet(viewsets.ModelViewSet):
+    queryset = News.objects.filter(url='').order_by('-published_date')  # Solo las publicaciones tipo Ask
+    serializer_class = AskSerializer
+
+    def list(self, request, *args, **kwargs):
+        # Calcular relevancia y ordenar
+        print("Se accedió al endpoint de AskViewSet")
+        asks_list = list(self.queryset)
+        asks_list.sort(
+            key=lambda ask: calculate_relevance(ask.points, ask.published_date),
+            reverse=True  # Orden descendente
+        )
+
+        # Anotar si el usuario ha votado en los asks (si hay un usuario logueado)
+        user_email = request.user.email if request.user.is_authenticated else None
+        annotated_asks = annotate_user_votes(asks_list, user_email)
+
+        # Serializar los datos
+        serializer = self.get_serializer(annotated_asks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
