@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import NewListView, AskViewSet
+from .views import NewListViewSet, AskViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -18,9 +18,13 @@ app_name='API'
 
 router = DefaultRouter()
 router.register(r'asks', AskViewSet, basename='asks')
-router.register(r'', NewListView, basename='news')
+router.register(r'submit', SubmitViewSet, basename='submit')
+router.register(r'user', CustomUserViewSet, basename='user')
+router.register(r'newest', NewestListViewSet, basename='newest')
+router.register(r'', NewListViewSet, basename='news')
 
 urlpatterns = [
+    path('user/<str:email>/', views.CustomUserViewSet.as_view({'get': 'retrieve'}), name='customuser_detail'),
     path('', include(router.urls)),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

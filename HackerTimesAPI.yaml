@@ -1,0 +1,369 @@
+openapi: 3.0.3
+info:
+  title: HackerTimes  - OpenAPI 3.0
+  description: >-
+    Aquesta es l'especificació de la nostra API, feta per:
+    
+      -Aranu
+    
+      -Lorenzo
+    
+      -Noelia Lopez 
+    
+      -Enrique Andujar
+    
+
+
+
+    Some useful links:
+
+    - [The Pet Store
+    repository](https://127.0.0.1/)
+
+    - [The source API definition for HackerTimes
+    Store](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
+    
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: contact@hackerTimes.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: https://127.0.0.1:8000/
+tags:
+  - name: news
+    description: News ordenades per relevància
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/
+  - name: newest
+    description: News ordenades per data
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/newest/
+  - name: user
+    description: Operacions de usuaris
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/user/
+
+paths:
+  /API/:
+    get:
+      tags:
+        - news
+      summary: Llista de news
+      description: La llista de news ordenada per relevancia
+      operationId: getNews
+      parameters:
+        - name: name
+          in: query
+          description: Indicate a name to fiter by it in the url
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: Indicate a username to fiter by the author's username
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Indicate a email to fiter by the author's email
+          required: false
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+
+  /API/newest/:
+    get:
+      tags:
+        - newest
+      summary: Llista de noves news
+      description: La llista de news ordenada per data
+      operationId: getNewest
+      parameters:
+        - name: name
+          in: query
+          description: Indicate a name to fiter by it in the url
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: Indicate a username to fiter by the author's username
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Indicate a email to fiter by the author's email
+          required: false
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+
+  /API/user/:
+    get:
+      tags:
+        - user
+      summary: El teu usuari
+      description: Retorna el teu propi usuari
+      operationId: getYourUser
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: L'usuari no ha iniciat sessió
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha iniciat sessió"
+      security:
+        - api_auth:
+            - read:user
+
+    put:
+      tags:
+        - user
+      summary: Modifica el teu usuari
+      description: Edita el teu propi usuari, amb els camps que vulguis
+      operationId: editYourUser
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Un dels paràmetres no està ben especificat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad request"
+      security:
+        - api_auth:
+            - write:user
+            - read:user
+
+
+  /API/user/{email}/:
+    get:
+      tags:
+        - user
+      summary: Un usuari específic
+      description: Retorna el usuari amb email igual que el del path
+      operationId: getUser
+      parameters:
+        - name: email
+          in: path
+          description: Email com a pk del usuari
+          required: true
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Usuari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no existeix"
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          description: username del usuari
+          example: Username
+        email:
+          description: email del usuari
+          type: string
+          example: user@email.com
+        created_at:
+          description: data i hora del moment de creació de l'usuari, en el format de l'exemple
+          type: string
+          example: YYYY-MM-DDTHH:MM:SS.MMMMMMZ
+        karma:
+          description: karma points del usuari
+          type: integer
+          example: 1
+        about:
+          type: string
+          description: l'about del usuari, pot ser null
+          example: Un about
+        banner:
+          type: string
+          description: l'url de la imatge de banner que té l'usuari
+          example: image.com/4
+        avatar:
+          description: l'url de la imatge de avatar que té l'usuari
+          type: string
+          example: image.com/5
+        show-dead:
+          type: boolean
+          description: User Status
+          example: true
+        no_procrastinate:
+          type: boolean
+          description: User Status
+          example: true
+        max_visit:
+          type: integer
+          example: 1
+        min_away:
+          type: integer
+          example: 1
+        delay:
+          type: integer
+          example: 1
+        favorite_news:
+          description: llista de news favorites de l'usuari
+          type: array
+          items: 
+            $ref: '#/components/schemas/News'
+          example: []
+        favorite_comments:
+          description: llista de comments favorits de l'usuari
+          type: string
+          example: []
+
+
+    News:
+      required:
+        - name
+        - photoUrls
+      type: object
+      properties:
+        title:
+          type: string
+          example: Test title
+        url:
+          type: string
+          description: the news's url
+          example: http://example.com
+        urlDomain:
+          type: string
+          description: the news's domain
+          example: example.com
+        text:
+          type: string
+          description: the news's text
+          example: This would be the new text
+        author:
+          type: string
+          description: the news's author email
+          example: author@example.com
+        points:
+          type: integer
+          description: pet status in the store
+          example: 20
+        is_hidden:
+          type: boolean
+          description: is the new hidden?
+          example: false
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        error:
+          type: string
+          description: >-
+            Un string amb els detalls de l'error(No estarà la response si
+            aquesta retorna un detail o objectes correctament)
+          example: L'usuari no ha iniciat sessió
+        detail:
+          type: string
+          description: >-
+            Un string amb els detalls de l'operació(No estarà la response si
+            aquesta retorna un error o objectes correctament)
+          example: Operació exitosa, new creada!
+      xml:
+        name: '##default'
+  requestBodies:
+    New:
+      description: New object that needs to be added
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/News'
+            
+    NewsArray:
+      description: Llista de news
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/News'
+
+    UserArray:
+      description: List of user object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+  securitySchemes:
+    api_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://127.0.0.1:8000/login/
+          scopes:
+            write:user: modifica un usuari
+            read:user: llegeix el teu usuari
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
