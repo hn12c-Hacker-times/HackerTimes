@@ -59,6 +59,12 @@ class ThreadSerializer(serializers.ModelSerializer):
         fields = [ 'title', 'comments', 'updated_at']
 
 
+class AskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = News
+        fields = ['title', 'text', 'author', 'published_date', 'points']
+
+
 class SubmitSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
@@ -88,3 +94,4 @@ class SubmitSerializer(serializers.ModelSerializer):
             validated_data['urlDomain'] = ''
             
         return super().create(validated_data)
+

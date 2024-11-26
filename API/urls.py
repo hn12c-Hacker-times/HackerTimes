@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import NewListViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet
+from .views import NewListViewSet, AskViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -17,6 +17,7 @@ app_name='API'
 """
 
 router = DefaultRouter()
+router.register(r'asks', AskViewSet, basename='asks')
 router.register(r'submit', SubmitViewSet, basename='submit')
 router.register(r'user', CustomUserViewSet, basename='user')
 router.register(r'newest', NewestListViewSet, basename='newest')
