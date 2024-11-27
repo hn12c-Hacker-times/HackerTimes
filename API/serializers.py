@@ -54,9 +54,12 @@ class HiddenNewsSerializer(serializers.ModelSerializer):
 
         
 class ThreadSerializer(serializers.ModelSerializer):
+    comments = CommentsSerializer(many=True)  # Anidamos los comentarios en el thread
+
     class Meta:
         model = Thread
-        fields = [ 'title', 'comments', 'updated_at']
+        fields = ['title', 'comments', 'updated_at']
+        read_only_fields = ['updated_at']  # El campo `updated_at` es solo de lectura
 
 
 class AskSerializer(serializers.ModelSerializer):
@@ -94,4 +97,3 @@ class SubmitSerializer(serializers.ModelSerializer):
             validated_data['urlDomain'] = ''
             
         return super().create(validated_data)
-

@@ -283,3 +283,53 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response({'detail: Usuari esborrat correctament'}, status=status.HTTP_204_NO_CONTENT)
 
+
+class ThreadViewSet(viewsets.ModelViewSet):
+    queryset = Thread.objects.all().order_by('-updated_at')
+    serializer_class = ThreadSerializer
+    permission_classes = [IsAuthenticated]  # Requerir que el usuario esté autenticado
+
+    def list(self, request, *args, **kwargs):
+        # Verificar si el usuario está autenticado
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Obtener el usuario autenticado
+        user = request.user
+
+        # Obtener los comentarios del usuario
+        comments = Comments.objects.filter(author=user)
+
+        threads = []
+        for comment in comments:
+            # Verificar si el comentario es una respuesta
+            if comment.parent:
+                parent_thread = Thread.objects.filter(comments=comment.parent).first()
+                if parent_thread:
+                    thread = parent_thread
+                else:
+                    thread = Thread.objects.create(title=comment.parent.text)
+                    thread.comments.add(comment.parent)
+                    thread.save()
+            else:
+                # Si no es respuesta, crear un nuevo thread
+                thread = Thread.objects.filter(comments=comment).first()
+                if not thread:
+                    thread = Thread.objects.create(title=comment.text)
+                thread.comments.add(comment)
+                thread.save()
+
+            # Actualizar fecha de última publicación
+            last_comment = comment.replies.last() if comment.replies.exists() else comment
+            thread.updated_at = last_comment.published_date
+            thread.save()
+
+            if thread not in threads:
+                threads.append(thread)
+
+        # Ordenar threads por la última actualización
+        threads.sort(key=lambda t: t.updated_at, reverse=True)
+
+        # Serializar threads
+        serializer = self.get_serializer(threads, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
