@@ -96,8 +96,4 @@ class SubmitSerializer(serializers.ModelSerializer):
         else:
             validated_data['urlDomain'] = ''
             
-<<<<<<< HEAD
         return super().create(validated_data)
-=======
-        return super().create(validated_data)
->>>>>>> develop

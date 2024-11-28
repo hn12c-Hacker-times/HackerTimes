@@ -11,13 +11,8 @@ from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
-<<<<<<< HEAD
-from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, SubmitSerializer
-import tldextract
-=======
 from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, AskSerializer, SubmitSerializer
 import tldextract, boto3
->>>>>>> develop
 
 # Create your views here.
 """
@@ -209,9 +204,6 @@ class SubmitViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
-<<<<<<< HEAD
-            )
-=======
             )
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -341,4 +333,3 @@ class ThreadViewSet(viewsets.ModelViewSet):
         # Serializar threads
         serializer = self.get_serializer(threads, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
->>>>>>> develop

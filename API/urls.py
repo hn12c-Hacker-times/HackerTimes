@@ -17,17 +17,12 @@ app_name='API'
 """
 
 router = DefaultRouter()
-<<<<<<< HEAD
-router.register(r'submit', SubmitViewSet, basename='submit')
-router.register(r'', NewListView, basename='news')
-=======
 router.register(r'asks', AskViewSet, basename='asks')
 router.register(r'submit', SubmitViewSet, basename='submit')
 router.register(r'user', CustomUserViewSet, basename='user')
 router.register(r'newest', NewestListViewSet, basename='newest')
 router.register(r'threads', ThreadViewSet, basename='threads')
 router.register(r'', NewListViewSet, basename='news')
->>>>>>> develop
 
 urlpatterns = [
     path('user/<str:email>/', views.CustomUserViewSet.as_view({'get': 'retrieve'}), name='customuser_detail'),
