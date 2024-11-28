@@ -287,13 +287,17 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 class ThreadViewSet(viewsets.ModelViewSet):
     queryset = Thread.objects.all().order_by('-updated_at')
     serializer_class = ThreadSerializer
-    permission_classes = [IsAuthenticated]  # Requerir que el usuario esté autenticado
 
     def list(self, request, *args, **kwargs):
         # Verificar si el usuario está autenticado
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-
+        
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return Response(
+                {"error": "API key is required"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        print(f"Api_key: {api_key}")
         # Obtener el usuario autenticado
         user = request.user
 
