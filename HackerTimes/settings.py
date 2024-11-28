@@ -29,14 +29,30 @@ SECRET_KEY = 'django-insecure-&r5%tl8g52!zxo8bgn%6d1lb%a76tfx86o$#lokq5vv()2ik9d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
+ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [
+    'https://editor.swagger.io',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-    'https://hackertimes-0dd5aa346ba7.herokuapp.com'
-    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/'
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com',
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/',
+    '*',
+
+
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',  # Agregar 'authorization' si es necesario para tus cabeceras
+    'X-API-Key',
+    'X-api-key',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://editor.swagger.io',
+    'http://localhost:8000',
+]
 # Application definition
 INSTALLED_APPS = [
     'News',
@@ -70,6 +86,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,7 +95,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'News.middleware.APIKeyMiddleware',
 ]
 

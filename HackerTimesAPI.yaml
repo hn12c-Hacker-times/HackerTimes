@@ -8,7 +8,7 @@ info:
     
       -Lorenzo
     
-      -Noelia Lopez 
+      -Noelia Lopez
     
       -Enrique Andujar
     
@@ -31,7 +31,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.11
 servers:
-  - url: https://127.0.0.1:8000/
+  - url: http://127.0.0.1:8000
 tags:
   - name: news
     description: News ordenades per relevància
@@ -138,6 +138,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '400':
+          description: Api-key amb format incorrecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Api-key amb format incorrecte"
         '401':
           description: L'usuari no ha iniciat sessió
           content:
@@ -149,7 +159,7 @@ paths:
                     type: string
                     example: "L'usuari no ha iniciat sessió"
       security:
-        - api_auth:
+        - api_key:
             - read:user
 
     put:
@@ -175,6 +185,7 @@ paths:
                   error:
                     type: string
                     example: "Bad request"
+
       security:
         - api_auth:
             - write:user
@@ -365,5 +376,5 @@ components:
             read:user: llegeix el teu usuari
     api_key:
       type: apiKey
-      name: api_key
+      name: X-API-Key
       in: header
