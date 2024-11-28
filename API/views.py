@@ -244,7 +244,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def update(self,request):
         serializer = CustomUserSerializer(data=request.data)
 
-
         if serializer.is_valid():
             serializer.save()
             key = request.headers.get('X-API-Key')
