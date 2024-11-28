@@ -3,6 +3,9 @@ info:
   title: HackerTimes API
   description: API documentation for the HackerTimes project.
   version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local server
 paths:
   /API/asks/:
     get:
@@ -38,6 +41,30 @@ paths:
                   detail:
                     type: string
                     example: Not found
+  /API/threads/:
+    get:
+      summary: Retrieve a list of threads
+      description: Retrieve all threads associated with the authenticated user.
+      operationId: getThreads
+      responses:
+        '200':
+          description: A list of threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Thread'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User is not authenticated
 components:
   schemas:
     Ask:
@@ -59,3 +86,20 @@ components:
         points:
           type: integer
           example: 2
+    Thread:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Example Thread Title"
+        comments:
+          type: array
+          items:
+            type: string
+          example:
+            - "This is a comment"
+            - "This is a reply"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-11-27T21:30:00Z"
