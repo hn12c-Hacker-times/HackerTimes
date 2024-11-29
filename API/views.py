@@ -211,13 +211,17 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     
     def list(self, request):
-        if 'api_key' not in request.session:
+        key = request.headers.get('X-API-Key')
+        if not key:
             return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
         
-        key = request.session['api_key'].get('email')
-        user_data = request.session['user_data']
-        user = CustomUser.objects.get(api_key=key)
-        
+        try:
+            user = CustomUser.objects.get(api_key=key)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
+
         if user:
             return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)  # Renderiza el html
 
@@ -240,13 +244,18 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def update(self,request):
         serializer = CustomUserSerializer(data=request.data)
 
-
         if serializer.is_valid():
             serializer.save()
-            if 'api_key' in request.data:
-                user = CustomUser.objects.get(api_key=request.data['api_key'])
-            else:
+            key = request.headers.get('X-API-Key')
+            if not key:
                 return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
+
+            try:
+                user = CustomUser.objects.get(api_key=key)
+            except CustomUser.DoesNotExist:
+                return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
+            except Exception:
+                return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
 
             if 'banner' in request.data and request.data['banner'] == '':
                 user.banner = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg'  #Reinicia el campo en el modelo

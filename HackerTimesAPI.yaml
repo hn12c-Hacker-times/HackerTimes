@@ -31,7 +31,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.11
 servers:
-  - url: https://127.0.0.1:8000/
+  - url: http://127.0.0.1:8000
 tags:
   - name: news
     description: News ordenades per relevància
@@ -138,6 +138,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '400':
+          description: Api-key amb format incorrecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Api-key amb format incorrecte"
         '401':
           description: L'usuari no ha iniciat sessió
           content:
@@ -149,15 +159,45 @@ paths:
                     type: string
                     example: "L'usuari no ha iniciat sessió"
       security:
-        - api_auth:
+        - api_key:
             - read:user
 
+  /API/user/update/:
     put:
       tags:
         - user
       summary: Modifica el teu usuari
       description: Edita el teu propi usuari, amb els camps que vulguis
       operationId: editYourUser
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "Username"
+                email:
+                  type: string
+                  format: email
+                  example: "user@email.com"
+                about:
+                  type: string
+                  example: "Un about"
+                banner:
+                  type: string
+                  format: binary
+                  description: "Archivo de banner (imagen)"
+                avatar:
+                  type: string
+                  format: binary
+                  description: "Archivo de avatar (imagen)"
+              required:
+                - username
+                - email
+
       responses:
         '200':
           description: Successful operation
@@ -165,6 +205,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '400':
+          description: Api-key amb format incorrecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Api-key amb format incorrecte"
+        '401':
+          description: L'usuari no ha iniciat sessió
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha iniciat sessió"
+
+      security:
+        - api_key:
+            - write:user
+            - read:user
+
+  /API/user/delete/:
+    delete:
+      tags:
+        - user
+      summary: Esborra el teu usuari
+      description: Esborra el teu propi usuari
+      operationId: deleteYourUser
+      responses:
+        '204':
+          description: Successful operation
+
         '400':
           description: Un dels paràmetres no està ben especificat
           content:
@@ -174,12 +251,12 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Bad request"
+                    example: ""
+
       security:
-        - api_auth:
+        - api_key:
             - write:user
             - read:user
-
 
   /API/user/{email}/:
     get:
@@ -267,7 +344,7 @@ components:
         favorite_news:
           description: llista de news favorites de l'usuari
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/News'
           example: []
         favorite_comments:
@@ -355,15 +432,7 @@ components:
             items:
               $ref: '#/components/schemas/User'
   securitySchemes:
-    api_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: http://127.0.0.1:8000/login/
-          scopes:
-            write:user: modifica un usuari
-            read:user: llegeix el teu usuari
     api_key:
       type: apiKey
-      name: api_key
+      name: X-API-Key
       in: header

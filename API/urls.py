@@ -25,6 +25,9 @@ router.register(r'threads', ThreadViewSet, basename='threads')
 router.register(r'', NewListViewSet, basename='news')
 
 urlpatterns = [
+
+    path('user/delete/', views.CustomUserViewSet.as_view({'delete': 'destroy'}), name='customuser_delete'),
+    path('user/update/', views.CustomUserViewSet.as_view({'put': 'update'}), name='customuser_detail'),
     path('user/<str:email>/', views.CustomUserViewSet.as_view({'get': 'retrieve'}), name='customuser_detail'),
     path('', include(router.urls)),
 ]
