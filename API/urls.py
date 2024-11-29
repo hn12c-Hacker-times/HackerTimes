@@ -17,7 +17,7 @@ app_name='API'
 """
 
 router = DefaultRouter()
-router.register(r'asks', AskViewSet, basename='asks')
+router.register(r'ask', AskViewSet, basename='asks')
 router.register(r'submit', SubmitViewSet, basename='submit')
 router.register(r'user', CustomUserViewSet, basename='user')
 router.register(r'newest', NewestListViewSet, basename='newest')

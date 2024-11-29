@@ -226,12 +226,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)  # Renderiza el html
 
     def retrieve(self, request, email, *args, **kwargs):
-        user = CustomUser.objects.get(email=email)
-
-        if user:
-            return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)
-        else:
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
             return Response({"error": "L'usuari no existeix"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)
 
     def create(self, request):
         serializer = CustomUserSerializer(data=request.data)
@@ -244,52 +244,72 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def update(self,request):
         serializer = CustomUserSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            key = request.headers.get('X-API-Key')
-            if not key:
-                return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
 
-            try:
-                user = CustomUser.objects.get(api_key=key)
-            except CustomUser.DoesNotExist:
-                return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
-            except Exception:
-                return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
+        key = request.headers.get('X-API-Key')
+        if not key:
+            return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
 
-            if 'banner' in request.data and request.data['banner'] == '':
-                user.banner = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg'  #Reinicia el campo en el modelo
-                user.save()  #Guarda el usuario después de eliminar los archivos, si es necesario
-                
-            if 'avatar' in request.data and request.data['banner'] == '':
-                user.avatar = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/avatars/DefaultProfile_IJlCHTZ.png' #Reinicia el campo en el modelo
-                user.save()
+        try:
+            user = CustomUser.objects.get(api_key=key)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
+
+        for key, value in request.data.items():
+            if key not in ["username", "about","banner_file", "avatar_file", "remove_banner", "remove_avatar"]:
+                return Response({"error": "No es pot modificar el camp, o aquest no existeix " + key}, status=status.HTTP_400_BAD_REQUEST)
+            elif key != "banner" and key != "avatar" and key != "remove_banner" and key != "remove_avatar":
+                if request.data[key] != '':
+                    if key == 'username':
+                        try:
+                            user.username = value
+                            user.full_clean()
+                        except ValidationError as e:
+                            return Response({"error": "El nom d'usuari ja existeix"}, status=status.HTTP_400_BAD_REQUEST)
+                    setattr(user, key, value)
+
+
+        if 'remove_banner' in request.data:
+            user.banner = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg'  #Reinicia el campo en el modelo
+            user.save()  #Guarda el usuario después de eliminar los archivos, si es necesario
             
-            if 'banner_file' in request.FILES:
-                banner_file = request.FILES['banner_file']
-                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-                s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
-                user.banner = f'{settings.AWS_S3_CUSTOM_DOMAIN}/banner/{banner_file.name}'  # Guarda la URL
-                user.save()
+        if 'remove_avatar' in request.data:
+            user.avatar = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/avatars/DefaultProfile_IJlCHTZ.png' #Reinicia el campo en el modelo
+            user.save()
+        
+        if 'banner_file' in request.FILES:
+            banner_file = request.FILES['banner_file']
+            s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+            s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
+            user.banner = f'{settings.AWS_S3_CUSTOM_DOMAIN}/banner/{banner_file.name}'  # Guarda la URL
+            user.save()
 
-            if 'avatar_file' in request.FILES:
-                avatar_file = request.FILES['avatar_file']
-                s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-                s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
-                user.avatar = f'{settings.AWS_S3_CUSTOM_DOMAIN}/avatar/{avatar_file.name}'  # Guarda la URL
-                user.save()
-            
-            return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)
+        if 'avatar_file' in request.FILES:
+            avatar_file = request.FILES['avatar_file']
+            s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
+            s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
+            user.avatar = f'{settings.AWS_S3_CUSTOM_DOMAIN}/avatar/{avatar_file.name}'  # Guarda la URL
+            user.save()
+        user.full_clean()
+        user.save()
+        return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)
 
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self,request):
-        if 'api_key' in request.data:
-            user = CustomUser.objects.get(api_key=request.data['api_key'])
-        else:
+        
+        key = request.headers.get('X-API-Key')
+        if not key:
             return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            user = CustomUser.objects.get(api_key=key)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
         user.delete()
+
         return Response({'detail: Usuari esborrat correctament'}, status=status.HTTP_204_NO_CONTENT)
 
 
