@@ -43,9 +43,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = [ 'username','email', 'created_at', 'karma', 'about', 'banner', 'avatar', 'show_dead', 'no_procrastinate', 'max_visit', 'min_away', 'delay', 'favorite_news', 'favorite_comments']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+
 
 class HiddenNewsSerializer(serializers.ModelSerializer):
     class Meta:
