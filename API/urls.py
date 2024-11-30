@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import NewListViewSet, AskViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet
+from .views import CommentFavoriteViewSet, CommentVoteViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -23,12 +23,20 @@ router.register(r'user', CustomUserViewSet, basename='user')
 router.register(r'newest', NewestListViewSet, basename='newest')
 router.register(r'threads', ThreadViewSet, basename='threads')
 router.register(r'', NewListViewSet, basename='news')
+router.register(r'news-vote', NewsVoteViewSet, basename='news-vote')
+router.register(r'comment-vote', CommentVoteViewSet, basename='comment-vote')
+router.register(r'news-favorite', NewsFavoriteViewSet, basename='news-favorite')
+router.register(r'comment-favorite', CommentFavoriteViewSet, basename='comment-favorite')
 
 urlpatterns = [
 
     path('user/delete/', views.CustomUserViewSet.as_view({'delete': 'destroy'}), name='customuser_delete'),
     path('user/update/', views.CustomUserViewSet.as_view({'put': 'update'}), name='customuser_detail'),
     path('user/<str:email>/', views.CustomUserViewSet.as_view({'get': 'retrieve'}), name='customuser_detail'),
+    path('news-vote/<int:pk>/', NewsVoteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='news-vote-detail'),
+    path('comment-vote/<int:pk>/', CommentVoteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='comment-vote-detail'),
+    path('news-favorite/<int:pk>/', NewsFavoriteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='news-favorite-detail'),
+    path('comment-favorite/<int:pk>/', CommentFavoriteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='comment-favorite-detail'),
     path('', include(router.urls)),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
