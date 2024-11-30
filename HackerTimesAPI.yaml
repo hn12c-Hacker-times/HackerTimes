@@ -65,6 +65,8 @@ tags:
       description: Mira-ho en format web
       url: http://127.0.0.1:8000/submit/
 
+  - name: comment
+    description: Operacions de submissions
   - name: news-vote
     description: Operacions per votar i desvotar news
   - name: comment-vote
@@ -596,6 +598,237 @@ paths:
                     type: string
                 example:
                   error: "La submission no existeix"
+
+  /API/comment/{id}/:
+    get:
+      tags:
+        - comment
+      summary: Obtenir un comentari
+      description: Retorna un comentari específic pel seu identificador.
+      operationId: getComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comentari retornat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+
+    put:
+      tags:
+        - comment
+      summary: Editar un comentari
+      description: Edita un comentari existent creat per l'usuari autenticat.
+      operationId: editComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Dades necessàries per editar el comentari
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  example: "Text editat del comentari."
+      responses:
+        '200':
+          description: Comentari editat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '403':
+          description: No autoritzat per editar el comentari
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots editar comentaris d'un altre usuari."
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - comment
+      summary: Eliminar un comentari
+      description: Elimina un comentari existent creat per l'usuari autenticat.
+      operationId: deleteComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Comentari eliminat correctament
+        '403':
+          description: No autoritzat per eliminar el comentari
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots eliminar comentaris d'un altre usuari."
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/comment/:
+    post:
+      tags:
+        - comment
+      summary: Crear un nou comentari
+      description: Crear un comentari per a una notícia específica (sense pare).
+      operationId: createComment
+      requestBody:
+        description: Dades necessàries per crear el comentari
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                news_id:
+                  type: integer
+                  example: 4
+                text:
+                  type: string
+                  example: "Aquest és un comentari nou."
+      responses:
+        '201':
+          description: Comentari creat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Error en les dades proporcionades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "S'han de proporcionar tant el 'news_id' com el 'text'."
+        '404':
+          description: Notícia no trobada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/comment/{id}/reply/:
+    post:
+      tags:
+        - comment
+      summary: Respondre a un comentari
+      description: Crear una resposta a un comentari existent.
+      operationId: replyToComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari pare
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Dades necessàries per crear la resposta
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  example: "Aquest és un comentari de resposta."
+      responses:
+        '201':
+          description: Resposta creada correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Error en les dades proporcionades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "S'ha de proporcionar el 'text' per al comentari."
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
 
   /API/news-vote/{news_id}/:
     post:
