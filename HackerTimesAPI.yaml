@@ -58,6 +58,10 @@ tags:
     externalDocs:
       description: Mira-ho en format web
       url: http://127.0.0.1:8000/user/
+  - name: news-vote
+    description: Operacions per votar i desvotar news
+  - name: comment-vote
+    description: Operacions per votar i desvotar comentaris
 
 paths:
   /API/ask/:
@@ -393,6 +397,258 @@ paths:
                   error:
                     type: string
                     example: "L'usuari no existeix"
+
+  /API/news-vote/{news_id}/:
+    post:
+      tags:
+        - news-vote
+      summary: Vota una notícia
+      description: Permet votar una notícia especificada pel seu `news_id`.
+      operationId: voteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia que es vol votar.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Vot registrat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot registrat correctament."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: L'usuari ja ha votat aquesta notícia.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari ja ha votat aquesta notícia."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '403':
+          description: L'usuari no pot votar les seves pròpies notícies.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots votar les teves pròpies notícies."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+    delete:
+      tags:
+        - news-vote
+      summary: Desvota una notícia
+      description: Permet eliminar un vot d'una notícia especificada pel seu `news_id`.
+      operationId: unvoteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia que es vol desvotar.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vot eliminat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot eliminat correctament."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: L'usuari no ha votat aquesta notícia.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha votat aquesta notícia."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+
+  /API/comment-vote/{comment_id}/:
+    post:
+      tags:
+        - comment-vote
+      summary: Vota un comentari
+      description: Permet votar un comentari especificat pel seu `comment_id`.
+      operationId: voteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari que es vol votar.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Vot registrat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot registrat correctament."
+                  comment_id:
+                    type: integer
+                    example: 42
+        '400':
+          description: L'usuari ja ha votat aquest comentari.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari ja ha votat aquest comentari."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '403':
+          description: L'usuari no pot votar els seus propis comentaris.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots votar els teus propis comentaris."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+    delete:
+      tags:
+        - comment-vote
+      summary: Desvota un comentari
+      description: Permet eliminar un vot d'un comentari especificat pel seu `comment_id`.
+      operationId: unvoteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari que es vol desvotar.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vot eliminat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot eliminat correctament."
+                  comment_id:
+                    type: integer
+                    example: 42
+        '400':
+          description: L'usuari no ha votat aquest comentari.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha votat aquest comentari."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
 
 components:
   schemas:

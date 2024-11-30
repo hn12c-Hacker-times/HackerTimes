@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
@@ -362,3 +363,165 @@ class ThreadViewSet(viewsets.ModelViewSet):
         # Serializar threads
         serializer = self.get_serializer(threads, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class NewsVoteViewSet(viewsets.ViewSet):
+    """
+    ViewSet per votar i desvotar notícies.
+    """
+
+    def validate_api_key(self, request):
+        """
+        Valida la clau API i retorna l'usuari associat.
+        """
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            user = CustomUser.objects.get(api_key=api_key)
+            return user, None
+        except CustomUser.DoesNotExist:
+            return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def get_news_or_404(self, pk):
+        """
+        Retorna la notícia pel seu `pk` o genera un error personalitzat en català.
+        """
+        try:
+            return News.objects.get(id=pk)
+        except News.DoesNotExist:
+            raise Http404("No s'ha trobat cap notícia amb aquest identificador.")
+
+    def create(self, request, pk=None):
+        """
+        Crida API per votar una notícia.
+        """
+        user, error_response = self.validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news = self.get_news_or_404(pk)
+
+        if user == news.author:
+            return Response({"error": "No pots votar les teves pròpies notícies."}, status=status.HTTP_403_FORBIDDEN)
+
+        if user in news.voters.all():
+            return Response({"error": "L'usuari ja ha votat aquesta notícia."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Afegeix el vot
+        news.voters.add(user)
+        news.points += 1
+        news.save()
+
+        # Actualitza el karma de l'autor
+        news.author.karma += 1
+        news.author.save()
+
+        return Response({
+            "message": "Vot registrat correctament.",
+            "news_id": news.id,
+            "current_votes": news.points
+        }, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk=None):
+        """
+        Crida API per eliminar un vot d'una notícia.
+        """
+        user, error_response = self.validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news = self.get_news_or_404(pk)
+
+        if user not in news.voters.all():
+            return Response({"error": "L'usuari no ha votat aquesta notícia."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Elimina el vot
+        news.voters.remove(user)
+        news.points -= 1
+        news.save()
+
+        # Actualitza el karma de l'autor
+        news.author.karma = max(0, news.author.karma - 1)
+        news.author.save()
+
+        return Response({
+            "message": "Vot eliminat correctament.",
+            "news_id": news.id,
+            "current_votes": news.points
+        }, status=status.HTTP_200_OK)
+    
+class CommentVoteViewSet(viewsets.ViewSet):
+    """
+    ViewSet per votar i desvotar comentaris.
+    """
+
+    def validate_api_key(self, request):
+        """
+        Valida la clau API i retorna l'usuari associat.
+        """
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            user = CustomUser.objects.get(api_key=api_key)
+            return user, None
+        except CustomUser.DoesNotExist:
+            return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def get_comment_or_404(self, pk):
+        """
+        Retorna el comentari pel seu `pk` o genera un error personalitzat en català.
+        """
+        try:
+            return Comments.objects.get(id=pk)
+        except Comments.DoesNotExist:
+            raise Http404("No s'ha trobat cap comentari amb aquest identificador.")
+    
+    def create(self, request, pk=None):
+        """
+        Crida API per votar un comentari.
+        """
+        user, error_response = self.validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = self.get_comment_or_404(pk)
+
+        if user == comment.author:
+            return Response({"error": "No pots votar els teus propis comentaris."}, status=status.HTTP_403_FORBIDDEN)
+
+        if user in comment.voters.all():
+            return Response({"error": "L'usuari ja ha votat aquest comentari."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Afegeix el vot
+        comment.voters.add(user)
+        comment.save()
+
+        return Response({
+            "message": "Vot registrat correctament.",
+            "comment_id": comment.id
+        }, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk=None):
+        """
+        Crida API per eliminar un vot d'un comentari.
+        """
+        user, error_response = self.validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = self.get_comment_or_404(pk)
+
+        if user not in comment.voters.all():
+            return Response({"error": "L'usuari no ha votat aquest comentari."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Elimina el vot
+        comment.voters.remove(user)
+        comment.save()
+
+        return Response({
+            "message": "Vot eliminat correctament.",
+            "comment_id": comment.id
+        }, status=status.HTTP_200_OK)
