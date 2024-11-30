@@ -7,6 +7,7 @@ from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
+from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -186,7 +187,6 @@ class NewestListViewSet(viewsets.ModelViewSet):
         queryset = annotate_user_votes(queryset, user_email)
         return Response(NewsSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
-
 class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
@@ -238,6 +238,95 @@ class SubmitViewSet(viewsets.ModelViewSet):
                 {"error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def retrieve(self, request, pk=None):
+        try:
+            print(pk)
+            # Obtener la submission específica
+            submission = News.objects.get(id=pk)
+            print(id)
+            # Serializar y devolver los datos
+            serializer = self.get_serializer(submission)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except News.DoesNotExist:
+            return Response(
+                {"error": "La submission no existeix"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def update(self, request, pk=None):
+        # Verificar API key
+        key = request.headers.get('X-API-Key')
+        if not key:
+            return Response({"error": "L'usuari no ha iniciat sessió"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            # Obtener usuario
+            user = CustomUser.objects.get(api_key=key)
+            
+            # Obtener submission
+            submission = News.objects.get(id=pk)
+            
+            # Verificar autoría
+            if submission.author != user:
+                return Response({"error": "No tens permisos per editar aquesta submission"}, 
+                            status=status.HTTP_403_FORBIDDEN)
+
+            # Validar campos permitidos
+            allowed_fields = ["title", "text"] if not submission.url else ["title", "url"]
+            for key in request.data.keys():
+                if key not in allowed_fields:
+                    return Response(
+                        {"error": f"No es pot modificar el camp {key}, o aquest no existeix."}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Usar el serializer para actualizar
+            serializer = self.get_serializer(submission, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except CustomUser.DoesNotExist:
+            return Response({"error": "L'usuari no existeix"}, 
+                        status=status.HTTP_404_NOT_FOUND)
+        except News.DoesNotExist:
+            return Response({"error": "La submission no existeix"}, 
+                        status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, submission_id):
+        # Obtener la clave API de las cabeceras de la solicitud
+        key = request.headers.get('X-API-Key')
+        if not key:
+            return Response({"error": "L'usuari no ha iniciat sessió"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Intentar obtener al usuario mediante la clave API
+        try:
+            user = CustomUser.objects.get(api_key=key)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "L'usuari no existeix"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Api-key amb format incorrecte"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Intentar obtener la submission a eliminar
+        try:
+            submission = News.objects.get(id=submission_id)
+        except News.DoesNotExist:
+            return Response({"error": "La submission no existeix"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar que el usuario es el autor de la submission
+        if submission.author != user:
+            return Response({"error": "No tens permisos per eliminar aquesta submission"}, status=status.HTTP_403_FORBIDDEN)
+
+        # Eliminar la submission
+        submission.delete()
+
+        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)  
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
