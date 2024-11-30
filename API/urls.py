@@ -29,6 +29,8 @@ urlpatterns = [
     path('user/delete/', views.CustomUserViewSet.as_view({'delete': 'destroy'}), name='customuser_delete'),
     path('user/update/', views.CustomUserViewSet.as_view({'put': 'update'}), name='customuser_detail'),
     path('user/<str:email>/', views.CustomUserViewSet.as_view({'get': 'retrieve'}), name='customuser_detail'),
+    path('submit/<int:pk>/edit/', SubmitViewSet.as_view({'put': 'update'}), name='submit_edit'),
+    path('submit/<int:submission_id>/delete/', SubmitViewSet.as_view({'delete': 'destroy'}), name='submit_delete'),    
     path('', include(router.urls)),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

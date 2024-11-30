@@ -10,8 +10,8 @@ class NewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = News
-        fields = ['title', 'url', 'urlDomain', 'text', 'author', 'points', 'is_hidden']
-        read_only_fields = ['points', 'is_hidden', 'urlDomain', 'author']  # Incluir author aquí también
+        fields = ['id', 'title', 'url', 'urlDomain', 'text', 'author', 'points', 'is_hidden']
+        read_only_fields = ['id', 'points', 'is_hidden', 'urlDomain', 'author']  # Incluir author aquí también
         
     def create(self, validated_data):
         request = self.context.get('request')
@@ -65,34 +65,67 @@ class AskSerializer(serializers.ModelSerializer):
         model = News
         fields = ['title', 'text', 'author', 'published_date', 'points']
 
-
 class SubmitSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
-        fields = ['title', 'url', 'text', 'author']
-        read_only_fields = ['author']  # El autor se asigna automáticamente
+        fields = ['id', 'title', 'url', 'text', 'author']
+        read_only_fields = ['id', 'author']  # El autor se asigna automáticamente
+
+    def validate_url(self, value):
+        """
+        Validar el formato de la URL
+        """
+        if value:  # Solo validar si hay URL
+            try:
+                url_validator = URLValidator()
+                url_validator(value)
+            except ValidationError:
+                raise serializers.ValidationError(
+                    "Invalid URL format. Please provide a valid URL (e.g., https://example.com)"
+                )
+        return value
         
     def validate(self, data):
         """
         Validar los datos del submit
         """
-        # Verificar que hay URL o texto, pero no necesariamente ambos
-        if not data.get('url') and not data.get('text'):
-            raise serializers.ValidationError(
-                "Either URL or text must be provided"
-            )
-            
+        instance = getattr(self, 'instance', None)
+        
+        # Si estamos actualizando una instancia existente
+        if instance:
+            # Si es una ask (no tiene URL)
+            if not instance.url:
+                # No permitir añadir URL
+                if data.get('url'):
+                    raise serializers.ValidationError(
+                        "Cannot add URL to an Ask submission"
+                    )
+            # Si es una news (tiene URL)
+            else:
+                # No permitir eliminar URL
+                if 'url' in data and not data.get('url'):
+                    raise serializers.ValidationError(
+                        "News submissions must maintain a URL"
+                    )
+                
+        # Para nuevas creaciones
+        else:
+            if not data.get('url') and not data.get('text'):
+                raise serializers.ValidationError(
+                    "Either URL or text must be provided"
+                )
+
         return data
         
     def create(self, validated_data):
         """
         Crear una nueva noticia/ask con los datos validados
         """
-        is_ask = not validate_data.get('url')
+        is_ask = not validated_data.get('url')
 
         if is_ask:
-            validate_data['url'] = ''
-            validate_data['urlDomain'] = ''
+            validated_data['url'] = ''
+            validated_data['urlDomain'] = ''
         else:
 
             if validated_data.get('url'):
@@ -103,3 +136,24 @@ class SubmitSerializer(serializers.ModelSerializer):
         # Crear la noticia o ask
         news = News.objects.create(**validated_data)
         return news
+
+    def update(self, instance, validated_data):
+        """
+        Actualizar una noticia/ask existente
+        """
+        # Actualizar los campos básicos
+        instance.title = validated_data.get('title', instance.title)
+        instance.text = validated_data.get('text', instance.text)
+        
+        # Manejar la URL y el dominio
+        new_url = validated_data.get('url')
+        if new_url is not None:  # Si se proporcionó una URL en la actualización
+            if new_url:  # Si la URL no está vacía
+                instance.url = new_url
+                instance.urlDomain = tldextract.extract(new_url).domain
+            else:  # Si la URL está vacía (convirtiendo en ask)
+                instance.url = ''
+                instance.urlDomain = ''
+        
+        instance.save()
+        return instance
