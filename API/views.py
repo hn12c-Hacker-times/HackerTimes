@@ -1,8 +1,6 @@
-from django.http import Http404
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
-from django.conf import settings
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -12,8 +10,8 @@ from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
-from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, AskSerializer, SubmitSerializer
-import tldextract, boto3
+from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, SubmitSerializer
+import tldextract
 
 # Create your views here.
 """
@@ -48,28 +46,14 @@ def annotate_user_votes(news_list, user_email):
             news_item.user_has_voted = False
     return news_list
 
-class NewListViewSet(viewsets.ModelViewSet):
+class NewListView(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
     
     def list(self, request, *args, **kwargs):
         user_data = self.request.session.get('user_data')
-        name = request.query_params.get("name","")
         user_email = user_data.get('email') if user_data else None
-        name = request.query_params.get("name","")
-        username = request.query_params.get("username","")
-        email = request.query_params.get("email","")
-
-        if name:
-            queryset = News.objects.filter(title__icontains=name)
-        else:
-            queryset = News.objects.all()
-        if username:
-            author = CustomUser.objects.filter(username=username).first()
-            if author:
-                queryset = queryset.filter(author=author.email)
-        if email:
-            queryset = queryset.filter(author=email)
+        username = self.request.GET.get("username", "")
 
         if user_data:
             user = CustomUser.objects.get(email=user_data['email'])
@@ -78,9 +62,19 @@ class NewListViewSet(viewsets.ModelViewSet):
             # Obtener las noticias ocultas de ese usuario
             hidden_news_ids = HiddenNews.objects.filter(user=user).values_list('news_id', flat=True)
             #print(f"Hidden news IDs: {list(hidden_news_ids)}")  # Ver los IDs de noticias ocultas
+
+            # Si hay un nombre de usuario, mostrar solo las noticias de ese usuario
+            if username:
+                author = CustomUser.objects.filter(username=username).first()
+                if author:
+                    queryset = News.objects.filter(author=author, is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-published_date')
+                    #print(f"Query for author '{username}': {queryset}")  # Ver la consulta para el autor
+                    if not queryset.exists():
+                        return Response(NewsSerializer(News.objects.none(), many=True).data, status=status.HTTP_404_NOT_FOUND)
+                    return Response(NewsSerializer(annotate_user_votes(queryset, user_email), many=True).data, status=status.HTTP_200_OK)
             
             # Excluir las noticias ocultas para el usuario actual y ordenarlas por puntos
-            queryset = queryset.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
+            queryset = News.objects.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
 
             # Calculate relevance for each item and sort manually
             news_list = list(queryset)
@@ -91,8 +85,9 @@ class NewListViewSet(viewsets.ModelViewSet):
             sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
             return Response(NewsSerializer(annotate_user_votes(sorted_queryset, user_email), many=True).data, status=status.HTTP_200_OK)
 
-        # Si el usuario no está logueado, mostrar todas las noticias
-        
+        # Si el usuario no está logueado, solo mostrar las noticias no ocultas
+        queryset = News.objects.filter(is_hidden=False)
+
         # Calculate relevance for each item and sort manually
         news_list = list(queryset)
         news_list.sort(
@@ -101,58 +96,6 @@ class NewListViewSet(viewsets.ModelViewSet):
         )
         sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
         return Response(NewsSerializer(sorted_queryset, many=True).data, status=status.HTTP_200_OK)
-
-
-class AskViewSet(viewsets.ModelViewSet):
-    queryset = News.objects.filter(url='').order_by('-published_date')  # Solo las publicaciones tipo Ask
-    serializer_class = AskSerializer
-
-    def list(self, request, *args, **kwargs):
-        # Calcular relevancia y ordenar
-        print("Se accedió al endpoint de AskViewSet")
-        asks_list = list(self.queryset)
-        asks_list.sort(
-            key=lambda ask: calculate_relevance(ask.points, ask.published_date),
-            reverse=True  # Orden descendente
-        )
-
-        # Anotar si el usuario ha votado en los asks (si hay un usuario logueado)
-        user_email = request.user.email if request.user.is_authenticated else None
-        annotated_asks = annotate_user_votes(asks_list, user_email)
-
-        # Serializar los datos
-        serializer = self.get_serializer(annotated_asks, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class NewestListViewSet(viewsets.ModelViewSet):
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
-    
-    def list(self, request, *args, **kwargs):
-        user_data = self.request.session.get('user_data')
-        user_email = user_data.get('email') if user_data else None
-        
-        name = request.query_params.get("name","")
-        username = request.query_params.get("username","")
-        email = request.query_params.get("email","")
-        queryset = News.objects.all()
-        if name:
-            queryset = queryset.filter(title__icontains=name)
-
-        if username:
-            author = CustomUser.objects.filter(username=username).first()
-            if author:
-                queryset = queryset.filter(author=author.email)
-            else:
-                queryset = News.objects.none()
-
-        if email:
-            queryset = queryset.filter(author=email)
-
-        queryset.filter(is_hidden=False).order_by('-published_date')
-        queryset = annotate_user_votes(queryset, user_email)
-        return Response(NewsSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
 
 class SubmitViewSet(viewsets.ModelViewSet):
@@ -206,322 +149,3 @@ class SubmitViewSet(viewsets.ModelViewSet):
                 {"error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-class CustomUserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
-    
-    def list(self, request):
-        key = request.headers.get('X-API-Key')
-        if not key:
-            return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
-        
-        try:
-            user = CustomUser.objects.get(api_key=key)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
-        except Exception:
-            return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
-
-        if user:
-            return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)  # Renderiza el html
-
-    def retrieve(self, request, email, *args, **kwargs):
-        
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"}, status=status.HTTP_404_NOT_FOUND)
-        return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)
-
-    def create(self, request):
-        serializer = CustomUserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-    def update(self,request):
-        serializer = CustomUserSerializer(data=request.data)
-
-
-        key = request.headers.get('X-API-Key')
-        if not key:
-            return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            user = CustomUser.objects.get(api_key=key)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
-        except Exception:
-            return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
-
-        for key, value in request.data.items():
-            if key not in ["username", "about","banner_file", "avatar_file", "remove_banner", "remove_avatar"]:
-                return Response({"error": "No es pot modificar el camp, o aquest no existeix " + key}, status=status.HTTP_400_BAD_REQUEST)
-            elif key != "banner" and key != "avatar" and key != "remove_banner" and key != "remove_avatar":
-                if request.data[key] != '':
-                    if key == 'username':
-                        try:
-                            user.username = value
-                            user.full_clean()
-                        except ValidationError as e:
-                            return Response({"error": "El nom d'usuari ja existeix"}, status=status.HTTP_400_BAD_REQUEST)
-                    setattr(user, key, value)
-
-
-        if 'remove_banner' in request.data:
-            user.banner = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/banners/DefaultBanner.jpg'  #Reinicia el campo en el modelo
-            user.save()  #Guarda el usuario después de eliminar los archivos, si es necesario
-            
-        if 'remove_avatar' in request.data:
-            user.avatar = 'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com/avatars/DefaultProfile_IJlCHTZ.png' #Reinicia el campo en el modelo
-            user.save()
-        
-        if 'banner_file' in request.FILES:
-            banner_file = request.FILES['banner_file']
-            s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-            s3.upload_fileobj(banner_file, settings.AWS_STORAGE_BUCKET_NAME, "banner/" + banner_file.name, ExtraArgs={'ACL': 'public-read'})
-            user.banner = f'{settings.AWS_S3_CUSTOM_DOMAIN}/banner/{banner_file.name}'  # Guarda la URL
-            user.save()
-
-        if 'avatar_file' in request.FILES:
-            avatar_file = request.FILES['avatar_file']
-            s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, aws_session_token=settings.AWS_SESSION_TOKEN)
-            s3.upload_fileobj(avatar_file, settings.AWS_STORAGE_BUCKET_NAME, "avatar/" + avatar_file.name, ExtraArgs={'ACL': 'public-read'})
-            user.avatar = f'{settings.AWS_S3_CUSTOM_DOMAIN}/avatar/{avatar_file.name}'  # Guarda la URL
-            user.save()
-        user.full_clean()
-        user.save()
-        return Response(CustomUserSerializer(user).data, status=status.HTTP_200_OK)
-
-
-    def destroy(self,request):
-        
-        key = request.headers.get('X-API-Key')
-        if not key:
-            return Response({"error": "L'usuari no ha iniciat sessió"},status=status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            user = CustomUser.objects.get(api_key=key)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"},status=status.HTTP_404_NOT_FOUND)
-        except Exception:
-            return Response({"error": "Api-key amb format incorrecte"},status=status.HTTP_400_BAD_REQUEST)
-        user.delete()
-
-        return Response({'detail: Usuari esborrat correctament'}, status=status.HTTP_204_NO_CONTENT)
-
-
-class ThreadViewSet(viewsets.ModelViewSet):
-    queryset = Thread.objects.all().order_by('-updated_at')
-    serializer_class = ThreadSerializer
-    permission_classes = [IsAuthenticated]  # Requerir que el usuario esté autenticado
-
-    def list(self, request, *args, **kwargs):
-        # Verificar si el usuario está autenticado
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # Obtener el usuario autenticado
-        user = request.user
-
-        # Obtener los comentarios del usuario
-        comments = Comments.objects.filter(author=user)
-
-        threads = []
-        for comment in comments:
-            # Verificar si el comentario es una respuesta
-            if comment.parent:
-                parent_thread = Thread.objects.filter(comments=comment.parent).first()
-                if parent_thread:
-                    thread = parent_thread
-                else:
-                    thread = Thread.objects.create(title=comment.parent.text)
-                    thread.comments.add(comment.parent)
-                    thread.save()
-            else:
-                # Si no es respuesta, crear un nuevo thread
-                thread = Thread.objects.filter(comments=comment).first()
-                if not thread:
-                    thread = Thread.objects.create(title=comment.text)
-                thread.comments.add(comment)
-                thread.save()
-
-            # Actualizar fecha de última publicación
-            last_comment = comment.replies.last() if comment.replies.exists() else comment
-            thread.updated_at = last_comment.published_date
-            thread.save()
-
-            if thread not in threads:
-                threads.append(thread)
-
-        # Ordenar threads por la última actualización
-        threads.sort(key=lambda t: t.updated_at, reverse=True)
-
-        # Serializar threads
-        serializer = self.get_serializer(threads, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-class NewsVoteViewSet(viewsets.ViewSet):
-    """
-    ViewSet per votar i desvotar notícies.
-    """
-
-    def validate_api_key(self, request):
-        """
-        Valida la clau API i retorna l'usuari associat.
-        """
-        api_key = request.headers.get('X-API-Key')
-        if not api_key:
-            return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            user = CustomUser.objects.get(api_key=api_key)
-            return user, None
-        except CustomUser.DoesNotExist:
-            return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
-    
-    def get_news_or_404(self, pk):
-        """
-        Retorna la notícia pel seu `pk` o genera un error personalitzat en català.
-        """
-        try:
-            return News.objects.get(id=pk)
-        except News.DoesNotExist:
-            raise Http404("No s'ha trobat cap notícia amb aquest identificador.")
-
-    def create(self, request, pk=None):
-        """
-        Crida API per votar una notícia.
-        """
-        user, error_response = self.validate_api_key(request)
-        if error_response:
-            return error_response
-
-        news = self.get_news_or_404(pk)
-
-        if user == news.author:
-            return Response({"error": "No pots votar les teves pròpies notícies."}, status=status.HTTP_403_FORBIDDEN)
-
-        if user in news.voters.all():
-            return Response({"error": "L'usuari ja ha votat aquesta notícia."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Afegeix el vot
-        news.voters.add(user)
-        news.points += 1
-        news.save()
-
-        # Actualitza el karma de l'autor
-        news.author.karma += 1
-        news.author.save()
-
-        return Response({
-            "message": "Vot registrat correctament.",
-            "news_id": news.id,
-            "current_votes": news.points
-        }, status=status.HTTP_201_CREATED)
-
-    def delete(self, request, pk=None):
-        """
-        Crida API per eliminar un vot d'una notícia.
-        """
-        user, error_response = self.validate_api_key(request)
-        if error_response:
-            return error_response
-
-        news = self.get_news_or_404(pk)
-
-        if user not in news.voters.all():
-            return Response({"error": "L'usuari no ha votat aquesta notícia."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Elimina el vot
-        news.voters.remove(user)
-        news.points -= 1
-        news.save()
-
-        # Actualitza el karma de l'autor
-        news.author.karma = max(0, news.author.karma - 1)
-        news.author.save()
-
-        return Response({
-            "message": "Vot eliminat correctament.",
-            "news_id": news.id,
-            "current_votes": news.points
-        }, status=status.HTTP_200_OK)
-    
-class CommentVoteViewSet(viewsets.ViewSet):
-    """
-    ViewSet per votar i desvotar comentaris.
-    """
-
-    def validate_api_key(self, request):
-        """
-        Valida la clau API i retorna l'usuari associat.
-        """
-        api_key = request.headers.get('X-API-Key')
-        if not api_key:
-            return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            user = CustomUser.objects.get(api_key=api_key)
-            return user, None
-        except CustomUser.DoesNotExist:
-            return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
-    
-    def get_comment_or_404(self, pk):
-        """
-        Retorna el comentari pel seu `pk` o genera un error personalitzat en català.
-        """
-        try:
-            return Comments.objects.get(id=pk)
-        except Comments.DoesNotExist:
-            raise Http404("No s'ha trobat cap comentari amb aquest identificador.")
-    
-    def create(self, request, pk=None):
-        """
-        Crida API per votar un comentari.
-        """
-        user, error_response = self.validate_api_key(request)
-        if error_response:
-            return error_response
-
-        comment = self.get_comment_or_404(pk)
-
-        if user == comment.author:
-            return Response({"error": "No pots votar els teus propis comentaris."}, status=status.HTTP_403_FORBIDDEN)
-
-        if user in comment.voters.all():
-            return Response({"error": "L'usuari ja ha votat aquest comentari."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Afegeix el vot
-        comment.voters.add(user)
-        comment.save()
-
-        return Response({
-            "message": "Vot registrat correctament.",
-            "comment_id": comment.id
-        }, status=status.HTTP_201_CREATED)
-
-    def delete(self, request, pk=None):
-        """
-        Crida API per eliminar un vot d'un comentari.
-        """
-        user, error_response = self.validate_api_key(request)
-        if error_response:
-            return error_response
-
-        comment = self.get_comment_or_404(pk)
-
-        if user not in comment.voters.all():
-            return Response({"error": "L'usuari no ha votat aquest comentari."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Elimina el vot
-        comment.voters.remove(user)
-        comment.save()
-
-        return Response({
-            "message": "Vot eliminat correctament.",
-            "comment_id": comment.id
-        }, status=status.HTTP_200_OK)
