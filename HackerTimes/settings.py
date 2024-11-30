@@ -36,8 +36,6 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'https://hackertimes-0dd5aa346ba7.herokuapp.com',
     'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/',
-    '*',
-
 
 ]
 
@@ -49,6 +47,7 @@ CORS_ALLOW_HEADERS = [
     'X-api-key',
 ]
 
+# CORS CONFIGURATION
 CORS_ALLOWED_ORIGINS = [
     'https://editor.swagger.io',
     'http://localhost:8000',
@@ -175,9 +174,3 @@ AWS_SESSION_TOKEN = "IQoJb3JpZ2luX2VjEMr//////////wEaCXVzLXdlc3QtMiJIMEYCIQCt1SW
 AWS_STORAGE_BUCKET_NAME = "hn12c-hackertimes"
 AWS_S3_REGION_NAME = "us-east-1"
 AWS_S3_CUSTOM_DOMAIN = f'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com'
-
-# CORS CONFIGURATION
-CORS_ALLOWED_ORIGINS = [
-    "https://editor.swagger.io",
-    "http://localhost:8000",
-]
