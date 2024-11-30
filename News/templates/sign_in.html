@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Hacker News</title>
+    <title>Submit | Hacker News</title>
     <script src="https://accounts.google.com/gsi/client" async></script>
     <style>
         body {
@@ -14,16 +14,41 @@
             height: 100vh;
             margin: 0;
         }
+
         .container {
+            /*background-color: white;*/
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
+
         }
-        .header {
-            background-color: #ff6600;
-            padding: 10px;
-            margin-bottom: 20px;
+
+        img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-top: 10px;
+        }
+
+        p {
+            color: #333;
+            margin: 10px 0;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .g_id_signin {
+            margin-top: 20px;
         }
     </style>
     {% load static %}
@@ -31,30 +56,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type='text/css' href="{% static '/news.css' %}">
     <link rel="icon" href="y18.svg">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="rss">
+    <title>Login | Hacker News</title>
 </head>
 <body>
-    <div class="container" style="background-color:#f6f6ef;">
-        <div>
-            <p class="header">Hi there 🙂</p>
-            <p style="color:#828282">Click below to sign in with Google</p>
-            
-            <div id="g_id_onload"
-                data-client_id="874622848519-8jml30qgbbb6ldplguu5l8uh5lja1nup.apps.googleusercontent.com"
-                data-context="signin"
-                data-ux_mode="redirect"
-                data-login_uri="http://localhost:8000/submit/"
-                data-itp_support="true">
-            </div>
-            
-            <div class="g_id_signin"
-                data-type="standard"
-                data-shape="rectangular"
-                data-theme="outline"
-                data-text="signin_with"
-                data-size="large"
-                data-logo_alignment="left">
-            </div>
+
+<div class="container" style="background-color:#f6f6ef;">
+    <div>
+        <p style="background-color:#ff6600;">Hi there 🙂 </p>
+        <p style="color:#828282">Click below to sign in with Google</p>
+        <div id="g_id_onload"
+            data-client_id="874622848519-8jml30qgbbb6ldplguu5l8uh5lja1nup.apps.googleusercontent.com"
+            data-context="signin"
+            data-ux_mode="redirect"
+            data-login_uri="https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/"
+            data-itp_support="true">
+        </div>
+
+        <div class="g_id_signin"
+            data-type="standard"
+            data-shape="rectangular"
+            data-theme="outline"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left"
+            >
+            data-logo_alignment="left"
+            >
         </div>
     </div>
+</div>
+
 </body>
 </html>
+

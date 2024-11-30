@@ -521,13 +521,8 @@ def delete_comment(request, comment_id):
     return redirect('news:item_detail', news_id=news_id)
 
 def login(request):
-    # Get the host from the request
-    host = request.get_host()
-    # Check if we're on localhost or 127.0.0.1
-    is_local = 'localhost' in host or '127.0.0.1' in host
-    
     if request.method == "POST":
-        token = request.POST.get('credential')
+        token = request.POST.get('credential')  # Obtener el token de Google
         if token:
             try:
                 user_data = id_token.verify_oauth2_token(
@@ -536,6 +531,13 @@ def login(request):
                 if CustomUser.objects.filter(email=user_data['email']).exists():
                     user = CustomUser.objects.get(email=user_data['email'])
                 else:
+                    if CustomUser.objects.filter(username=user_data['given_name']).exists():
+                        while CustomUser.objects.filter(username=user_data['given_name']+i).exists():
+                            i += 1
+                            nom = user_data['given_name']+i
+                    else:
+                        nom = user_data['given_name']
+                        
                     user = CustomUser.objects.create(
                         username=user_data['given_name'],
                         email=user_data['email'],
@@ -549,27 +551,13 @@ def login(request):
                         min_away=180,
                         delay=0
                     )
-                request.session['user_data'] = user_data
-                
-                # Get the current scheme (http or https)
-                scheme = request.scheme
-                
-                # Determine redirect URL based on host
-                if is_local:
-                    # Use the same host that was used to access the site
-                    return redirect(f'{scheme}://{host}/submit/')
-                else:
-                    return redirect('https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/')
-                    
+                request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
+                request.session['user_data']['karma'] = user.karma  # Add karma to user_data
+                return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias
             except ValueError:
-                return HttpResponse(status=403)
+                return HttpResponse(status=403)  # Token no válido
     
-    context = {
-        'is_local': is_local,
-        'current_host': host,
-        'scheme': request.scheme
-    }
-    return render(request, 'sign_in.html', context)
+    return render(request, 'sign_in.html')  # Mostrar la página de login de Google
 
 def logout(request):
     # Cerrar la sesión del usuario
