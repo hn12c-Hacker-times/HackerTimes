@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import CommentFavoriteViewSet, CommentVoteViewSet, FavoriteCommentsViewSet, FavoriteNewsViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet
+from .views import CommentFavoriteViewSet, CommentViewSet, CommentVoteViewSet, FavoriteCommentsViewSet, FavoriteNewsViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -20,6 +20,7 @@ router = DefaultRouter()
 router.register(r'ask', AskViewSet, basename='asks')
 router.register(r'submit', SubmitViewSet, basename='submit')
 router.register(r'user', CustomUserViewSet, basename='user')
+router.register(r'comment', CommentViewSet, basename='comment')
 router.register(r'newest', NewestListViewSet, basename='newest')
 router.register(r'threads', ThreadViewSet, basename='threads')
 router.register(r'news-vote', NewsVoteViewSet, basename='news-vote')

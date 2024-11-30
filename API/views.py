@@ -760,3 +760,89 @@ class FavoriteCommentsViewSet(viewsets.ViewSet):
         favorite_comments = user.favorite_comments.all().order_by('-published_date')
         serializer = CommentsSerializer(favorite_comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class CommentViewSet(viewsets.ViewSet):
+    """
+    API ViewSet per gestionar els comentaris.
+    """
+
+    def retrieve(self, request, pk=None):
+        """
+        Retorna un comentari específic pel seu identificador.
+        """
+        comment = get_comment_or_404(pk)
+        serializer = CommentsSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        """
+        Crear un nou comentari per a una notícia (sense pare).
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news_id = request.data.get("news_id")
+        text = request.data.get("text")
+        if not news_id or not text:
+            return Response({"error": "S'han de proporcionar tant el 'news_id' com el 'text'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        news = get_news_or_404(news_id)
+
+        comment = Comments.objects.create(text=text, author=user, New=news)
+        serializer = CommentsSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def reply(self, request, pk=None):
+        """
+        Crear una resposta a un comentari existent (pare).
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        parent = get_comment_or_404(pk)
+        text = request.data.get("text")
+        if not text:
+            return Response({"error": "S'ha de proporcionar el 'text' per al comentari."}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment = Comments.objects.create(text=text, author=user, parent=parent, New=parent.New)
+        serializer = CommentsSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None):
+        """
+        Editar un comentari existent.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = get_comment_or_404(pk)
+        if comment.author != user:
+            return Response({"error": "No pots editar comentaris d'un altre usuari."}, status=status.HTTP_403_FORBIDDEN)
+
+        text = request.data.get("text")
+        if not text:
+            return Response({"error": "S'ha de proporcionar el 'text' per actualitzar el comentari."}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment.text = text
+        comment.save()
+        serializer = CommentsSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, pk=None):
+        """
+        Eliminar un comentari existent.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = get_comment_or_404(pk)
+        if comment.author != user:
+            return Response({"error": "No pots eliminar comentaris d'un altre usuari."}, status=status.HTTP_403_FORBIDDEN)
+
+        comment.delete()
+        return Response({"message": "Comentari eliminat correctament."}, status=status.HTTP_200_OK)
