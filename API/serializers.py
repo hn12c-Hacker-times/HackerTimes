@@ -86,12 +86,20 @@ class SubmitSerializer(serializers.ModelSerializer):
         
     def create(self, validated_data):
         """
-        Crear una nueva noticia con los datos validados
+        Crear una nueva noticia/ask con los datos validados
         """
-        # Extraer el dominio de la URL si existe
-        if validated_data.get('url'):
-            validated_data['urlDomain'] = tldextract.extract(validated_data['url']).domain
+        is_ask = not validate_data.get('url')
+
+        if is_ask:
+            validate_data['url'] = ''
+            validate_data['urlDomain'] = ''
         else:
-            validated_data['urlDomain'] = ''
+
+            if validated_data.get('url'):
+                validated_data['urlDomain'] = tldextract.extract(validated_data['url']).domain
+            else:
+                validated_data['urlDomain'] = ''
             
-        return super().create(validated_data)
+        # Crear la noticia o ask
+        news = News.objects.create(**validated_data)
+        return news
