@@ -22,11 +22,11 @@ router.register(r'submit', SubmitViewSet, basename='submit')
 router.register(r'user', CustomUserViewSet, basename='user')
 router.register(r'newest', NewestListViewSet, basename='newest')
 router.register(r'threads', ThreadViewSet, basename='threads')
-router.register(r'', NewListViewSet, basename='news')
 router.register(r'news-vote', NewsVoteViewSet, basename='news-vote')
 router.register(r'comment-vote', CommentVoteViewSet, basename='comment-vote')
 router.register(r'news-favorite', NewsFavoriteViewSet, basename='news-favorite')
 router.register(r'comment-favorite', CommentFavoriteViewSet, basename='comment-favorite')
+router.register(r'', NewListViewSet, basename='news')
 
 urlpatterns = [
 
