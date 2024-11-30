@@ -690,3 +690,39 @@ class CommentFavoriteViewSet(viewsets.ViewSet):
             "message": "Comentari eliminat dels preferits.",
             "comment_id": comment.id
         }, status=status.HTTP_200_OK)
+
+class VotedNewsViewSet(viewsets.ViewSet):
+    """
+    API ViewSet per obtenir les notícies votades per un usuari.
+    """
+
+    def list(self, request):
+        """
+        Crida API per obtenir les notícies votades per un usuari.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Recuperar les notícies votades
+        voted_news = user.voted_news.all().order_by('-published_date')
+        serializer = NewsSerializer(voted_news, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class VotedCommentsViewSet(viewsets.ViewSet):
+    """
+    API ViewSet per obtenir els comentaris votats per un usuari.
+    """
+
+    def list(self, request):
+        """
+        Crida API per obtenir els comentaris votats per un usuari.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Recuperar els comentaris votats
+        voted_comments = user.voted_comments.all().order_by('-published_date')
+        serializer = CommentsSerializer(voted_comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
