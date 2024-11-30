@@ -1413,21 +1413,26 @@ paths:
       tags:
         - favorite-news
       summary: Notícies preferides
-      description: Recupera les notícies preferides per l'usuari autenticat.
+      description: Recupera les notícies preferides d'un usuari públicament. Es requereix el paràmetre `username`.
       operationId: getFavoriteNews
-      security:
-        - api_key: []
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: El `username` de l'usuari les notícies preferides del qual es volen obtenir.
+          schema:
+            type: string
       responses:
         '200':
-          description: Notícies preferides amb èxit.
+          description: Notícies preferides recuperades amb èxit.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/News'
-        '401':
-          description: Clau API no vàlida o no proporcionada.
+        '400':
+          description: Falta el paràmetre `username`.
           content:
             application/json:
               schema:
@@ -1435,28 +1440,43 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Cal proporcionar una clau API."
+                    example: "Cal proporcionar un 'username'."
+        '404':
+          description: Usuari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
 
   /API/favorite-comments/:
     get:
       tags:
         - favorite-comments
       summary: Comentaris preferits
-      description: Recupera els comentaris preferits per l'usuari autenticat.
+      description: Recupera els comentaris preferits d'un usuari públicament. Es requereix el paràmetre `username`.
       operationId: getFavoriteComments
-      security:
-        - api_key: []
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: El `username` de l'usuari els comentaris preferits del qual es volen obtenir.
+          schema:
+            type: string
       responses:
         '200':
-          description: Comentaris preferits amb èxit.
+          description: Comentaris preferits recuperats amb èxit.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Comment'
-        '401':
-          description: Clau API no vàlida o no proporcionada.
+        '400':
+          description: Falta el paràmetre `username`.
           content:
             application/json:
               schema:
@@ -1464,7 +1484,17 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Cal proporcionar una clau API."
+                    example: "Cal proporcionar un 'username'."
+        '404':
+          description: Usuari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
 components:
   schemas:
     User:

@@ -1,5 +1,5 @@
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
 from django.conf import settings
@@ -735,11 +735,14 @@ class FavoriteNewsViewSet(viewsets.ViewSet):
         """
         Crida API per obtenir les notícies preferides d'un usuari.
         """
-        user, error_response = validate_api_key(request)
-        if error_response:
-            return error_response
+        username = request.query_params.get('username')
+        if not username:
+            return Response({"error": "Cal proporcionar un 'username'."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Recuperar les notícies preferides
+        # Recuperar l'usuari pel username
+        user = get_object_or_404(CustomUser, username=username)
+
+        # Recuperar les notícies preferides de l'usuari
         favorite_news = user.favorite_news.all().order_by('-published_date')
         serializer = NewsSerializer(favorite_news, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -752,11 +755,14 @@ class FavoriteCommentsViewSet(viewsets.ViewSet):
         """
         Crida API per obtenir els comentaris preferits d'un usuari.
         """
-        user, error_response = validate_api_key(request)
-        if error_response:
-            return error_response
+        username = request.query_params.get('username')
+        if not username:
+            return Response({"error": "Cal proporcionar un 'username'."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Recuperar els comentaris preferits
+        # Recuperar l'usuari pel username
+        user = get_object_or_404(CustomUser, username=username)
+
+        # Recuperar els comentaris preferits de l'usuari
         favorite_comments = user.favorite_comments.all().order_by('-published_date')
         serializer = CommentsSerializer(favorite_comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
