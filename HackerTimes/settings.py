@@ -29,14 +29,29 @@ SECRET_KEY = 'django-insecure-&r5%tl8g52!zxo8bgn%6d1lb%a76tfx86o$#lokq5vv()2ik9d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
+ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [
+    'https://editor.swagger.io',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-    'https://hackertimes-0dd5aa346ba7.herokuapp.com'
-    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/'
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com',
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/',
+
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',  # Agregar 'authorization' si es necesario para tus cabeceras
+    'X-API-Key',
+    'X-api-key',
+]
+
+# CORS CONFIGURATION
+CORS_ALLOWED_ORIGINS = [
+    'https://editor.swagger.io',
+    'http://localhost:8000',
+]
 # Application definition
 INSTALLED_APPS = [
     'News',
@@ -70,6 +85,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,7 +94,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'News.middleware.APIKeyMiddleware',
 ]
 
@@ -153,15 +168,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # AWS Configuration
-AWS_ACCESS_KEY_ID = "ASIAVLRKON4XNDXOJ4XH"
-AWS_SECRET_ACCESS_KEY = "JyqzKxKCDm41g1ioGFAEXAfbpcif9ewSSQ3B826n"
-AWS_SESSION_TOKEN = "IQoJb3JpZ2luX2VjEGMaCXVzLXdlc3QtMiJHMEUCIQC1T7nyAHJEAzyd91EneWpkGOHzwHPcJ4uL2+ItUPg9fgIgfGTiF/MnVKqXQtSLgaZWrC3xbgA/BF0JBrklYFLuAMYqxgII7P//////////ARABGgwzNjgzODI0NzE5ODIiDOCspHI8YrDQXUvI8SqaAthRgZt+LMPFqLxYUrmQ49pxE1cpbSdf6ygowXiVPtWDBpJTOY5SclOmYJ4MtbumQ1E9CeK9v70+hxu286fxjjI53RjE96UEm4t20STtVpjPvRU5sszZlb1p1WnXcut8sa+0u1JhbWC12mAHZs5Khvltbs/OsTsDZdTbsUoTVvnk1eWhD5e5Q52d6FWfiQHntVHqCRUwh9G+6k0cJWtSjXOOi9R1DH3Vnwc7F0+WAFKJX9YfX4bMO8u21G9FJJZpf6UpAdAlmhc3o8jDnw04o7XT97Ye2ByxjoN6fJiNXUDuwghXil/1aSXmq57U+T4H7dSbrYdAvIfRSYDq/vs+pNosieHRbZA+8lYoXW2vEpl0LSRnC7RZilFiCTDhste5BjqdAbuPtmyTXgXeRn3P4nSan4jt3kdX75ScKytq9mxuJpYf7P7cyksPBW25izyvObqUFYLAPMSuRIoEa/iYKFTzD5tf4YaXYmRMtuszzklGCjMPEKsfSSRUhGnymcfHXkDFVoENO190lXxN6Tjk1LNfO86S4Neixf4OQ0zxL6vExhWrwyROWWyjVZt1GCP7vxj/drIDtbMBOaC3PEAtSic="
+AWS_ACCESS_KEY_ID = "ASIAVLRKON4XM2LCIDGK"
+AWS_SECRET_ACCESS_KEY = "Fyej77/T+mILau+ZnTMJXZyBPfOLqyj/GguIydET"
+AWS_SESSION_TOKEN = "IQoJb3JpZ2luX2VjEMr//////////wEaCXVzLXdlc3QtMiJIMEYCIQCt1SW4h6v1aXX6yZEHMD6WNoG8eeedsNZYA4gmTu5DFwIhALKgDYcN6q/2KBWS6Jet4v1NbDz4mWryE1xWLfnFTK6KKr0CCHMQARoMMzY4MzgyNDcxOTgyIgykmJiz6Kf8MvtPSlsqmgIgzkGnMsdyfAL1mVSRMT3weo6Dl+8ub5Gwxc55Q8ElgaUn6p7j2+fvGnU41RDsCFIXqus65rDAHoNHwl76gwY0D1QXBanv8iBVSLjKUZyeRaLI/6M62+fqMp8LBg3iRqy+YViVXJ/r6/+d0K1CL4X295oh83f0ilil0iuuJu9mNASX7vGIYnu47mS5HwMUBLGoQwFDTMgdUYZjkHwObdMo3ItRDM4SRcGROaQMCfS5vPFd9CYdWQpC9sPv0xi9p33m2RiXfiS56zlUQIJvwf/FZGYbKkeOvWeFIWBvyP+EkZ4jb9h5/h1ZqOe8MeD673uyAvj0CDeXAp1sa9xJY4JdwgV9klyY6tbuMlSJf9t6RwqZIBmb2PXomJww+aGmugY6nAFz5NrZcmTnLKbfbdgTmUdqt8TO9WWhjjfZzElJQUmM2u268GO5j8/fy4bMAUjbq72nBpGqyZoAFu2kd7pa+rWRUlAWw7+g7dWpHGkEBjTq0nuKMTI6pIDjVmrMyDcFXVXCN4M2GkMSoUPEWtJVzy9tnceX3e81IF6NGns361EVTaGX/X22Pe9NmDgZAysqeLf3YqGTkuDF0VnqPGA="
 AWS_STORAGE_BUCKET_NAME = "hn12c-hackertimes"
 AWS_S3_REGION_NAME = "us-east-1"
 AWS_S3_CUSTOM_DOMAIN = f'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com'
-
-# CORS CONFIGURATION
-CORS_ALLOWED_ORIGINS = [
-    "https://editor.swagger.io",
-    "http://localhost:8000",
-]
