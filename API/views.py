@@ -48,6 +48,38 @@ def annotate_user_votes(news_list, user_email):
             news_item.user_has_voted = False
     return news_list
 
+def validate_api_key(request):
+    """
+    Valida la clau API i retorna l'usuari associat.
+    """
+    api_key = request.headers.get('X-API-Key')
+    if not api_key:
+        return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        user = CustomUser.objects.get(api_key=api_key)
+        return user, None
+    except CustomUser.DoesNotExist:
+        return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
+
+def get_news_or_404(pk):
+    """
+    Retorna la notícia pel seu `pk` o genera un error personalitzat en català.
+    """
+    try:
+        return News.objects.get(id=pk)
+    except News.DoesNotExist:
+        raise Http404("No s'ha trobat cap notícia amb aquest identificador.")
+
+def get_comment_or_404(pk):
+    """
+    Retorna el comentari pel seu `pk` o genera un error personalitzat en català.
+    """
+    try:
+        return Comments.objects.get(id=pk)
+    except Comments.DoesNotExist:
+        raise Http404("No s'ha trobat cap comentari amb aquest identificador.")
+
 class NewListViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
@@ -369,38 +401,15 @@ class NewsVoteViewSet(viewsets.ViewSet):
     ViewSet per votar i desvotar notícies.
     """
 
-    def validate_api_key(self, request):
-        """
-        Valida la clau API i retorna l'usuari associat.
-        """
-        api_key = request.headers.get('X-API-Key')
-        if not api_key:
-            return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            user = CustomUser.objects.get(api_key=api_key)
-            return user, None
-        except CustomUser.DoesNotExist:
-            return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
-    
-    def get_news_or_404(self, pk):
-        """
-        Retorna la notícia pel seu `pk` o genera un error personalitzat en català.
-        """
-        try:
-            return News.objects.get(id=pk)
-        except News.DoesNotExist:
-            raise Http404("No s'ha trobat cap notícia amb aquest identificador.")
-
     def create(self, request, pk=None):
         """
         Crida API per votar una notícia.
         """
-        user, error_response = self.validate_api_key(request)
+        user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
-        news = self.get_news_or_404(pk)
+        news = get_news_or_404(pk)
 
         if user == news.author:
             return Response({"error": "No pots votar les teves pròpies notícies."}, status=status.HTTP_403_FORBIDDEN)
@@ -427,11 +436,11 @@ class NewsVoteViewSet(viewsets.ViewSet):
         """
         Crida API per eliminar un vot d'una notícia.
         """
-        user, error_response = self.validate_api_key(request)
+        user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
-        news = self.get_news_or_404(pk)
+        news = get_news_or_404(pk)
 
         if user not in news.voters.all():
             return Response({"error": "L'usuari no ha votat aquesta notícia."}, status=status.HTTP_400_BAD_REQUEST)
@@ -456,38 +465,15 @@ class CommentVoteViewSet(viewsets.ViewSet):
     ViewSet per votar i desvotar comentaris.
     """
 
-    def validate_api_key(self, request):
-        """
-        Valida la clau API i retorna l'usuari associat.
-        """
-        api_key = request.headers.get('X-API-Key')
-        if not api_key:
-            return None, Response({"error": "Cal proporcionar una clau API."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            user = CustomUser.objects.get(api_key=api_key)
-            return user, None
-        except CustomUser.DoesNotExist:
-            return None, Response({"error": "Clau API no vàlida."}, status=status.HTTP_401_UNAUTHORIZED)
-    
-    def get_comment_or_404(self, pk):
-        """
-        Retorna el comentari pel seu `pk` o genera un error personalitzat en català.
-        """
-        try:
-            return Comments.objects.get(id=pk)
-        except Comments.DoesNotExist:
-            raise Http404("No s'ha trobat cap comentari amb aquest identificador.")
-    
     def create(self, request, pk=None):
         """
         Crida API per votar un comentari.
         """
-        user, error_response = self.validate_api_key(request)
+        user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
-        comment = self.get_comment_or_404(pk)
+        comment = get_comment_or_404(pk)
 
         if user == comment.author:
             return Response({"error": "No pots votar els teus propis comentaris."}, status=status.HTTP_403_FORBIDDEN)
@@ -508,11 +494,11 @@ class CommentVoteViewSet(viewsets.ViewSet):
         """
         Crida API per eliminar un vot d'un comentari.
         """
-        user, error_response = self.validate_api_key(request)
+        user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
-        comment = self.get_comment_or_404(pk)
+        comment = get_comment_or_404(pk)
 
         if user not in comment.voters.all():
             return Response({"error": "L'usuari no ha votat aquest comentari."}, status=status.HTTP_400_BAD_REQUEST)
@@ -523,5 +509,95 @@ class CommentVoteViewSet(viewsets.ViewSet):
 
         return Response({
             "message": "Vot eliminat correctament.",
+            "comment_id": comment.id
+        }, status=status.HTTP_200_OK)
+    
+class NewsFavoriteViewSet(viewsets.ViewSet):
+    """
+    ViewSet per afegir o eliminar notícies de la llista de preferits.
+    """
+
+    def create(self, request, pk=None):
+        """
+        Crida API per afegir una notícia als preferits.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news = get_news_or_404(pk)
+
+        if news in user.favorite_news.all():
+            return Response({"error": "La notícia ja està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Afegir als preferits
+        user.favorite_news.add(news)
+        return Response({
+            "message": "Notícia afegida als preferits.",
+            "news_id": news.id
+        }, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk=None):
+        """
+        Crida API per eliminar una notícia dels preferits.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news = get_news_or_404(pk)
+
+        if news not in user.favorite_news.all():
+            return Response({"error": "La notícia no està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Eliminar dels preferits
+        user.favorite_news.remove(news)
+        return Response({
+            "message": "Notícia eliminada dels preferits.",
+            "news_id": news.id
+        }, status=status.HTTP_200_OK)
+    
+class CommentFavoriteViewSet(viewsets.ViewSet):
+    """
+    ViewSet per afegir o eliminar comentaris de la llista de preferits.
+    """
+
+    def create(self, request, pk=None):
+        """
+        Crida API per afegir un comentari als preferits.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = get_comment_or_404(pk)
+
+        if comment in user.favorite_comments.all():
+            return Response({"error": "El comentari ja està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Afegir als preferits
+        user.favorite_comments.add(comment)
+        return Response({
+            "message": "Comentari afegit als preferits.",
+            "comment_id": comment.id
+        }, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk=None):
+        """
+        Crida API per eliminar un comentari dels preferits.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = get_comment_or_404(pk)
+
+        if comment not in user.favorite_comments.all():
+            return Response({"error": "El comentari no està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Eliminar dels preferits
+        user.favorite_comments.remove(comment)
+        return Response({
+            "message": "Comentari eliminat dels preferits.",
             "comment_id": comment.id
         }, status=status.HTTP_200_OK)

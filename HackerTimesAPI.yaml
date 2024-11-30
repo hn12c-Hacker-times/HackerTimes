@@ -62,6 +62,10 @@ tags:
     description: Operacions per votar i desvotar news
   - name: comment-vote
     description: Operacions per votar i desvotar comentaris
+  - name: news-favorite
+    description: Afegir o eliminar notícies dels preferits
+  - name: comment-favorite
+    description: Afegir o eliminar comentaris dels preferits
 
 paths:
   /API/ask/:
@@ -466,6 +470,8 @@ paths:
                   detail:
                     type: string
                     example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
     delete:
       tags:
         - news-vote
@@ -523,6 +529,8 @@ paths:
                   detail:
                     type: string
                     example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
 
   /API/comment-vote/{comment_id}/:
     post:
@@ -592,6 +600,8 @@ paths:
                   detail:
                     type: string
                     example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
     delete:
       tags:
         - comment-vote
@@ -649,7 +659,248 @@ paths:
                   detail:
                     type: string
                     example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
 
+  /API/news-favorite/{news_id}/:
+    post:
+      tags:
+        - news-favorite
+      summary: Afegir una notícia als preferits
+      description: Afegir una notícia especificada pel seu identificador als preferits de l'usuari.
+      operationId: favoriteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia a afegir als preferits.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Notícia afegida als preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Notícia afegida als preferits."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: La notícia ja està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La notícia ja està als preferits."
+        '404':
+          description: No s'ha trobat cap notícia amb aquest identificador.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+      security:
+        - api_key: []
+    delete:
+      tags:
+        - news-favorite
+      summary: Eliminar una notícia dels preferits
+      description: Eliminar una notícia especificada pel seu identificador dels preferits de l'usuari.
+      operationId: unfavoriteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia a eliminar dels preferits.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notícia eliminada dels preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Notícia eliminada dels preferits."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: La notícia no està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La notícia no està als preferits."
+        '404':
+          description: No s'ha trobat cap notícia amb aquest identificador.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+      security:
+        - api_key: []
+
+  /API/comment-favorite/{comment_id}/:
+    post:
+      tags:
+        - comment-favorite
+      summary: Afegir un comentari als preferits
+      description: Afegir un comentari especificat pel seu identificador als preferits de l'usuari.
+      operationId: favoriteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari a afegir als preferits.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Comentari afegit als preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comentari afegit als preferits."
+                  comment_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: El comentari ja està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "El comentari ja està als preferits."
+        '404':
+          description: No s'ha trobat cap comentari amb aquest identificador.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+      security:
+        - api_key: []
+    delete:
+      tags:
+        - comment-favorite
+      summary: Eliminar un comentari dels preferits
+      description: Eliminar un comentari especificat pel seu identificador dels preferits de l'usuari.
+      operationId: unfavoriteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari a eliminar dels preferits.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comentari eliminat dels preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comentari eliminat dels preferits."
+                  comment_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: El comentari no està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "El comentari no està als preferits."
+        '404':
+          description: No s'ha trobat cap comentari amb aquest identificador.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+      security:
+        - api_key: []
 components:
   schemas:
     User:
