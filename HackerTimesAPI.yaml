@@ -77,6 +77,10 @@ tags:
     description: Llistat de news votades per l'usuari
   - name: voted-comments
     description: Llistat de comentaris votats per l'usuari
+  - name: favorite-news
+    description: Llistat de news preferides per l'usuari
+  - name: favorite-comments
+    description: Llistat de comentaris preferits per l'usuari
 paths:
   /API/ask/:
     get:
@@ -1170,6 +1174,64 @@ paths:
                     example: "Accés no autoritzat."
       security:
         - api_key: []
+
+  /API/favorite-news/:
+    get:
+      tags:
+        - favorite-news
+      summary: Notícies preferides
+      description: Recupera les notícies preferides per l'usuari autenticat.
+      operationId: getFavoriteNews
+      security:
+        - api_key: []
+      responses:
+        '200':
+          description: Notícies preferides amb èxit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/News'
+        '401':
+          description: Clau API no vàlida o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+
+  /API/favorite-comments/:
+    get:
+      tags:
+        - favorite-comments
+      summary: Comentaris preferits
+      description: Recupera els comentaris preferits per l'usuari autenticat.
+      operationId: getFavoriteComments
+      security:
+        - api_key: []
+      responses:
+        '200':
+          description: Comentaris preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '401':
+          description: Clau API no vàlida o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
 components:
   schemas:
     User:

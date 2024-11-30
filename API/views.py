@@ -726,3 +726,37 @@ class VotedCommentsViewSet(viewsets.ViewSet):
         voted_comments = user.voted_comments.all().order_by('-published_date')
         serializer = CommentsSerializer(voted_comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FavoriteNewsViewSet(viewsets.ViewSet):
+    """
+    API ViewSet per obtenir les notícies preferides d'un usuari.
+    """
+    def list(self, request):
+        """
+        Crida API per obtenir les notícies preferides d'un usuari.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Recuperar les notícies preferides
+        favorite_news = user.favorite_news.all().order_by('-published_date')
+        serializer = NewsSerializer(favorite_news, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FavoriteCommentsViewSet(viewsets.ViewSet):
+    """
+    API ViewSet per obtenir els comentaris preferits d'un usuari.
+    """
+    def list(self, request):
+        """
+        Crida API per obtenir els comentaris preferits d'un usuari.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Recuperar els comentaris preferits
+        favorite_comments = user.favorite_comments.all().order_by('-published_date')
+        serializer = CommentsSerializer(favorite_comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

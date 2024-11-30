@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import CommentFavoriteViewSet, CommentVoteViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet
+from .views import CommentFavoriteViewSet, CommentVoteViewSet, FavoriteCommentsViewSet, FavoriteNewsViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -41,6 +41,8 @@ urlpatterns = [
     path('comment-favorite/<int:pk>/', CommentFavoriteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='comment-favorite-detail'),
     path('voted-news/', VotedNewsViewSet.as_view({'get': 'list'}), name='voted-news-list'),
     path('voted-comments/', VotedCommentsViewSet.as_view({'get': 'list'}), name='voted-comments-list'),
+    path('favorite-news/', FavoriteNewsViewSet.as_view({'get': 'list'}), name='favorite-news-list'),
+    path('favorite-comments/', FavoriteCommentsViewSet.as_view({'get': 'list'}), name='favorite-comments-list'),
     path('', include(router.urls)),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
