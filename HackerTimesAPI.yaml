@@ -88,12 +88,12 @@ paths:
     get:
       tags:
         - ask
-      summary: Retrieve a list of asks
-      description: Retrieve all asks ordered by relevance and published date.
+      summary: Recupera una llista d'asks
+      description: Recupera tots els asks ordenats per rellevància i data de publicació.
       operationId: getAsks
       responses:
         '200':
-          description: A list of asks
+          description: Llista d'asks
           content:
             application/json:
               schema:
@@ -101,7 +101,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Ask'
         '401':
-          description: Unauthorized access
+          description: Accés no autoritzat
           content:
             application/json:
               schema:
@@ -109,9 +109,9 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: Unauthorized
+                    example: No autoritzat
         '404':
-          description: No asks found
+          description: No s'han trobat asks
           content:
             application/json:
               schema:
@@ -119,25 +119,26 @@ paths:
                 properties:
                   detail:
                     type: string
-                    example: Not found
+                    example: No trobat
+
   /API/threads/:
     get:
       tags:
         - thread
-      summary: Retrieve a list of threads
-      description: Retrieve all threads associated with the authenticated user.
+      summary: Recupera una llista de threads
+      description: Recupera tots els threads associats amb l'usuari autenticat mitjançant la seva API key.
       operationId: getThreads
       responses:
         '200':
-          description: A list of threads
+          description: Llista de threads recuperada correctament
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Thread'
-        '401':
-          description: Unauthorized access
+        '400':
+          description: Petició incorrecta
           content:
             application/json:
               schema:
@@ -145,7 +146,30 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: User is not authenticated
+                    example: "Petició incorrecta"
+        '401':
+          description: Accés no autoritzat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Credencials d'autenticació no proporcionades"
+        '404':
+          description: No s'han trobat threads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No trobat"
+      security:
+        - api_key: []
+
   /API/:
     get:
       tags:
