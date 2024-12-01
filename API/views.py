@@ -189,7 +189,7 @@ class NewestListViewSet(viewsets.ModelViewSet):
 
 class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
-    serializer_class = NewsSerializer
+    serializer_class = SubmitSerializer
     
     def get_serializer_context(self):
         """
@@ -274,7 +274,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
             # Validar campos permitidos
-            allowed_fields = ["title", "text"] if not submission.url else ["title", "url"]
+            allowed_fields = ["title", "text"] if not submission.url else ["title", "url", "text"]
             for key in request.data.keys():
                 if key not in allowed_fields:
                     return Response(
@@ -326,8 +326,8 @@ class SubmitViewSet(viewsets.ModelViewSet):
         # Eliminar la submission
         submission.delete()
 
-        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)  
-
+        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
+            
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
