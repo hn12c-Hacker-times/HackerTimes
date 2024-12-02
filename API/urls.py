@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from .views import CommentFavoriteViewSet, CommentViewSet, CommentVoteViewSet, FavoriteCommentsViewSet, FavoriteNewsViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet
+from .views import CommentFavoriteViewSet, CommentViewSet, CommentVoteViewSet, FavoriteCommentsViewSet, FavoriteNewsViewSet, NewListViewSet, AskViewSet, NewsFavoriteViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet, HideSubmissionViewSet, UnhideSubmissionViewSet, HiddenSubmissionsViewSet
 from . import views
 from rest_framework.routers import DefaultRouter
 
@@ -44,6 +44,9 @@ urlpatterns = [
     path('voted-comments/', VotedCommentsViewSet.as_view({'get': 'list'}), name='voted-comments-list'),
     path('favorite-news/', FavoriteNewsViewSet.as_view({'get': 'list'}), name='favorite-news-list'),
     path('favorite-comments/', FavoriteCommentsViewSet.as_view({'get': 'list'}), name='favorite-comments-list'),
+    path('hide/<int:pk>/', HideSubmissionViewSet.as_view({'post': 'create'}), name='hide_submission'),
+    path('unhide/<int:pk>/', UnhideSubmissionViewSet.as_view({'delete': 'delete'}), name='unhide_submission'),
+    path('hidden-submissions/', HiddenSubmissionsViewSet.as_view({'get': 'list'}), name='hidden_submissions_list'),
     path('', include(router.urls)),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
