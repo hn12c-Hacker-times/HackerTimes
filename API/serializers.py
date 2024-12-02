@@ -62,7 +62,6 @@ class ThreadSerializer(serializers.ModelSerializer):
         fields = ['title', 'comments', 'updated_at']
         read_only_fields = ['updated_at']  # El campo `updated_at` es solo de lectura
 
-
 class AskSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
