@@ -83,6 +83,13 @@ tags:
     description: Llistat de news preferides per l'usuari
   - name: favorite-comments
     description: Llistat de comentaris preferits per l'usuari
+  - name: hide
+    description: Operacions per amagar submissions
+  - name: unhide
+    description: Operacions per desamagar submissions
+  - name: hidden-submissions
+    description: Operacions per obtenir submissions amagades
+
 paths:
   /API/ask/:
     get:
@@ -1519,6 +1526,183 @@ paths:
                   error:
                     type: string
                     example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
+
+  /API/hide/{submission_id}/:
+    post:
+      tags:
+        - hide
+      summary: Amaga una submission
+      description: Amaga una submission especificada pel seu identificador només per a l'usuari autenticat.
+      operationId: hideSubmission
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          description: L'identificador de la submission que es vol amagar.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Submission amagada correctament.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "La submission s'ha amagat correctament."
+                  submission_id:
+                    type: integer
+                    example: 3
+        '400':
+          description: La submission ja està amagada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Aquesta submission ja està amagada."
+        '404':
+          description: Submission no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La submission no existeix."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+      security:
+        - api_key: []
+
+  /API/unhide/{submission_id}/:
+    delete:
+      tags:
+        - unhide
+      summary: Desamaga una submission
+      description: Desamaga una submission especificada pel seu identificador només per a l'usuari autenticat.
+      operationId: unhideSubmission
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          description: L'identificador de la submission que es vol desamagar.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Submission desamagada correctament.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "La submission s'ha desamagat correctament."
+                  submission_id:
+                    type: integer
+                    example: 3
+        '400':
+          description: La submission no està amagada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Aquesta submission no està amagada."
+        '404':
+          description: Submission no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La submission no existeix."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+      security:
+        - api_key: []
+
+  /API/hidden-submissions/:
+    get:
+      tags:
+        - hidden-submissions
+      summary: Obtenir submissions amagades
+      description: Recupera totes les submissions amagades per a l'usuari autenticat.
+      operationId: getHiddenSubmissions
+      responses:
+        '200':
+          description: Llistat de submissions amagades retornades correctament.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hidden_submissions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        submission_id:
+                          type: integer
+                          description: L'identificador de la submission amagada.
+                          example: 2
+                        title:
+                          type: string
+                          description: El títol de la submission amagada.
+                          example: "Test title"
+                        url:
+                          type: string
+                          description: La URL de la submission amagada (si n'hi ha).
+                          example: "http://example.com"
+                        text:
+                          type: string
+                          description: El text de la submission amagada (si és una ask).
+                          example: "This would be the text"
+                        hidden_at:
+                          type: string
+                          format: date-time
+                          description: La data i hora en què es va amagar la submission.
+                          example: "2024-12-02T11:49:15.810784Z"
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+      security:
+        - api_key: []
+
 components:
   schemas:
     User:
