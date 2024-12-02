@@ -868,3 +868,108 @@ class CommentViewSet(viewsets.ViewSet):
 
         comment.delete()
         return Response({"message": "Comentari eliminat correctament."}, status=status.HTTP_200_OK)
+
+
+class HideSubmissionViewSet(viewsets.ViewSet):
+    """
+    ViewSet per amagar una submission.
+    """
+
+    def create(self, request, pk=None):
+        """
+        Crida API per amagar una submission.
+        """
+        # Validar la API key
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Obtenir la submission
+        try:
+            news_item = News.objects.get(id=pk)
+        except News.DoesNotExist:
+            return Response({"error": "La submission no existeix."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar si ja està amagada
+        if HiddenNews.objects.filter(user=user, news=news_item).exists():
+            return Response({"error": "Aquesta submission ja està amagada."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Amagar la submission
+        HiddenNews.objects.create(user=user, news=news_item, hidden_at=timezone.now())
+        news_item.is_hidden = True
+        news_item.save(update_fields=["is_hidden"])
+
+        return Response({
+            "message": "La submission s'ha amagat correctament.",
+            "submission_id": news_item.id
+        }, status=status.HTTP_201_CREATED)
+
+
+class UnhideSubmissionViewSet(viewsets.ViewSet):
+    """
+    ViewSet per desamagar una submission.
+    """
+
+    def delete(self, request, pk=None):
+        """
+        Crida API per desamagar una submission.
+        """
+        # Validar la API key
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Obtenir la submission amagada
+        try:
+            news_item = News.objects.get(id=pk)
+        except News.DoesNotExist:
+            return Response({"error": "La submission no existeix."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Comprovar si la submission està amagada
+        hidden_news = HiddenNews.objects.filter(user=user, news=news_item).first()
+        if not hidden_news:
+            return Response({"error": "La submission no està amagada."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Eliminar la submission amagada
+        hidden_news.delete()
+        news_item.is_hidden = False
+        news_item.save(update_fields=["is_hidden"])
+
+        return Response({
+            "message": "La submission s'ha desamagat correctament.",
+            "submission_id": news_item.id
+        }, status=status.HTTP_200_OK)
+
+
+class HiddenSubmissionsViewSet(viewsets.ViewSet):
+    """
+    ViewSet per obtenir les submissions amagades d'un usuari.
+    """
+
+    def list(self, request):
+        """
+        Crida API per obtenir totes les submissions amagades per l'usuari.
+        """
+        # Validar la API key
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        # Obtenir les submissions amagades
+        hidden_submissions = HiddenNews.objects.filter(user=user).select_related('news')
+
+        # Serialitzar les submissions amagades
+        hidden_news_data = [
+            {
+                "submission_id": hidden_submission.news.id,
+                "title": hidden_submission.news.title,
+                "url": hidden_submission.news.url,
+                "text": hidden_submission.news.text,
+                "hidden_at": hidden_submission.hidden_at,
+            }
+            for hidden_submission in hidden_submissions
+        ]
+
+        return Response({
+            "hidden_submissions": hidden_news_data
+        }, status=status.HTTP_200_OK)
