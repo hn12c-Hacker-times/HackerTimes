@@ -71,18 +71,14 @@ tags:
     description: Operacions per votar i desvotar news
   - name: comment-vote
     description: Operacions per votar i desvotar comentaris
-  - name: news-favorite
-    description: Afegir o eliminar notícies dels preferits
-  - name: comment-favorite
-    description: Afegir o eliminar comentaris dels preferits
   - name: voted-news
     description: Llistat de news votades per l'usuari
   - name: voted-comments
     description: Llistat de comentaris votats per l'usuari
   - name: favorite-news
-    description: Llistat de news preferides per l'usuari
+    description: Llistat de news preferides per l'usuari, afegir o eliminar notícies dels preferits
   - name: favorite-comments
-    description: Llistat de comentaris preferits per l'usuari
+    description: Llistat de comentaris preferits per l'usuari, afegir o eliminar comentaris dels preferits
   - name: hide
     description: Operacions per amagar submissions
   - name: unhide
@@ -454,7 +450,7 @@ paths:
       tags:
         - submit
       summary: Creació d'una nova submission
-      description: Crea una nova new o una ask
+      description: Crea una nova notícia o una pregunta (ask)
       operationId: createSubmit
       requestBody:
         required: true
@@ -465,24 +461,43 @@ paths:
               properties:
                 title:
                   type: string
-                  example: "Example Title"
+                  example: "Títol d'exemple"
                 url:
                   type: string
                   example: "https://example.com"
                 text:
                   type: string
-                  example: "This is the content"
+                  example: "Aquest és el contingut"
               required:
                 - title
       responses:
         '201':
-          description: Successfully created
+          description: Creada correctament
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/News'
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+                example:
+                  {
+                    "id": 1,
+                    "title": "Títol d'exemple",
+                    "url": "https://example.com",
+                    "text": "Aquest és el contingut",
+                    "author": "user@example.com"
+                  }
         '400':
-          description: Invalid input
+          description: Error de validació
           content:
             application/json:
               schema:
@@ -490,9 +505,18 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Either URL or text must be provided"
+              examples:
+                missing_fields:
+                  value:
+                    error: "S'ha de proporcionar l'URL o el text"
+                invalid_url:
+                  value:
+                    error: "Format d'URL no vàlid. Si us plau, proporcioneu una URL vàlida (p. ex., https://example.com)"
+                unauthenticated:
+                  value:
+                    error: "No s'ha trobat cap usuari autenticat"
         '401':
-          description: Unauthorized
+          description: Error d'autenticació
           content:
             application/json:
               schema:
@@ -500,7 +524,13 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Authentication credentials were not provided"
+              examples:
+                missing_api_key:
+                  value:
+                    error: "Cal proporcionar l'Api Key"
+                invalid_api_key:
+                  value:
+                    error: "Clau API no vàlida"
       security:
         - api_key: []
 
@@ -509,12 +539,13 @@ paths:
       tags:
         - submit
       summary: Modifica una submission existent
-      description: Modifica una new o una ask pel seu id
+      description: Modifica una new o una ask pel seu id, en cas de ser
+                   una ask no s'ha d'inclure el camp url
       operationId: updateSubmit
       parameters:
         - name: id
           in: path
-          description: ID of the submission to update
+          description: ID de la submission a actualitzar
           required: true
           schema:
             type: integer
@@ -527,71 +558,16 @@ paths:
               properties:
                 title:
                   type: string
-                  example: "Updated Title"
+                  example: "Títol actualitzat"
                 url:
                   type: string
                   example: "https://example.com"
                 text:
                   type: string
-                  example: "Updated content"
+                  example: "Contingut actualitzat"
       responses:
         '200':
-          description: Successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/News'
-        '400':
-          description: Invalid input
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - Not the author
-        '404':
-          description: Submission not found
-      security:
-        - api_key: []
-        
-    delete:
-      tags:
-        - submit
-      summary: Esborra una submission
-      description: Esborra news o asks pel seu id
-      operationId: deleteSubmit
-      parameters:
-        - name: id
-          in: path
-          description: ID of the submission to delete
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Successfully deleted
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - Not the author
-        '404':
-          description: Submission not found
-      security:
-        - api_key: []
-  
-  /API/submit/{id}:
-    get:
-      summary: Obtenir una submission en específic
-      tags: 
-        - submit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Numeric ID of the submission
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Submission details retrieved successfully
+          description: Actualitzada correctament
           content:
             application/json:
               schema:
@@ -599,27 +575,24 @@ paths:
                 properties:
                   id:
                     type: integer
-                    description: The submission identifier
                   title:
                     type: string
-                    description: The title of the submission
                   url:
                     type: string
-                    description: The URL of the submission (empty for Ask submissions)
                   text:
                     type: string
-                    description: The text content (for Ask submissions)
                   author:
                     type: string
-                    description: Email of the author
-                example:
-                  id: 11
-                  title: "Example Submission"
-                  url: "https://example.com"
-                  text: ""
-                  author: "user@example.com"
-        '404':
-          description: Submission not found
+              example:
+                {
+                  "id": 1,
+                  "title": "Títol actualitzat",
+                  "url": "https://example.com",
+                  "text": "Contingut actualitzat",
+                  "author": "user@example.com"
+                }
+        '400':
+          description: Error de validació
           content:
             application/json:
               schema:
@@ -627,9 +600,258 @@ paths:
                 properties:
                   error:
                     type: string
-                example:
-                  error: "La submission no existeix"
+              examples:
+                invalid_fields:
+                  value:
+                    error: "No es pot modificar el camp, o aquest no existeix"
+                invalid_url:
+                  value:
+                    error: "Format d'URL no vàlid"
+                add_url_to_ask:
+                  value:
+                    error: "No es pot afegir URL a ask"
+                remove_url_from_news:
+                  value:
+                    error: "Les notícies han de mantenir una URL"
+        '401':
+          description: Error d'autenticació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "L'usuari no ha iniciat sessió"
+        '403':
+          description: Error de permisos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "No tens permisos per editar aquesta submission"
+        '404':
+          description: No trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                user_not_found:
+                  value:
+                    error: "L'usuari no existeix"
+                submission_not_found:
+                  value:
+                    error: "La submission no existeix"
+      security:
+        - api_key: []
 
+    delete:
+      tags:
+        - submit
+      summary: Esborra una submission
+      description: Esborra una notícia o pregunta pel seu id
+      operationId: deleteSubmit
+      parameters:
+        - name: id
+          in: path
+          description: ID de la submission a esborrar
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Esborrada correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Submission esborrada correctament"
+        '401':
+          description: Error d'autenticació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "L'usuari no ha iniciat sessió"
+        '403':
+          description: Error de permisos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "No tens permisos per eliminar aquesta submission"
+        '404':
+          description: No trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                user_not_found:
+                  value:
+                    error: "L'usuari no existeix"
+                submission_not_found:
+                  value:
+                    error: "La submission no existeix"
+      security:
+        - api_key: []
+        
+    get:
+      summary: Obtenir una submission específica
+      tags: 
+        - submit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la submission
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalls de la submission recuperats correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+              example:
+                {
+                  "id": 1,
+                  "title": "Submission d'exemple",
+                  "url": "https://example.com",
+                  "text": "Aquest és el contingut",
+                  "author": "user@example.com"
+                }
+        '404':
+          description: No trobada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "La submission no existeix"
+                  
+  /API/comment/:
+    get:
+      tags:
+        - comment
+      summary: Llista de comentaris
+      description: |
+        Retorna una llista de tots els comentaris. Si s'especifica el paràmetre `username`, es retornen només els comentaris d'aquest usuari.
+      operationId: listComments
+      parameters:
+        - name: username
+          in: query
+          description: El `username` de l'usuari per recuperar els seus comentaris.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Llista de comentaris retornada correctament.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '404':
+          description: Usuari no trobat (si es proporciona `username` i no existeix).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
+    post:
+      tags:
+        - comment
+      summary: Crear un nou comentari
+      description: Crear un comentari per a una notícia específica (sense pare).
+      operationId: createComment
+      requestBody:
+        description: Dades necessàries per crear el comentari
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                news_id:
+                  type: integer
+                  example: 4
+                text:
+                  type: string
+                  example: "Aquest és un comentari nou."
+      responses:
+        '201':
+          description: Comentari creat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Error en les dades proporcionades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "S'han de proporcionar tant el 'news_id' com el 'text'."
+        '404':
+          description: Notícia no trobada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
   /API/comment/{id}/:
     get:
       tags:
@@ -752,57 +974,6 @@ paths:
                   detail:
                     type: string
                     example: "No s'ha trobat cap comentari amb aquest identificador."
-      security:
-        - api_key: []
-
-  /API/comment/:
-    post:
-      tags:
-        - comment
-      summary: Crear un nou comentari
-      description: Crear un comentari per a una notícia específica (sense pare).
-      operationId: createComment
-      requestBody:
-        description: Dades necessàries per crear el comentari
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                news_id:
-                  type: integer
-                  example: 4
-                text:
-                  type: string
-                  example: "Aquest és un comentari nou."
-      responses:
-        '201':
-          description: Comentari creat correctament
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-        '400':
-          description: Error en les dades proporcionades
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "S'han de proporcionar tant el 'news_id' com el 'text'."
-        '404':
-          description: Notícia no trobada
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: "No s'ha trobat cap notícia amb aquest identificador."
       security:
         - api_key: []
 
@@ -1121,246 +1292,6 @@ paths:
       security:
         - api_key: []
 
-  /API/news-favorite/{news_id}/:
-    post:
-      tags:
-        - news-favorite
-      summary: Afegir una notícia als preferits
-      description: Afegir una notícia especificada pel seu identificador als preferits de l'usuari.
-      operationId: favoriteNews
-      parameters:
-        - name: news_id
-          in: path
-          required: true
-          description: L'identificador de la notícia a afegir als preferits.
-          schema:
-            type: integer
-      responses:
-        '201':
-          description: Notícia afegida als preferits amb èxit.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Notícia afegida als preferits."
-                  news_id:
-                    type: integer
-                    example: 1
-        '400':
-          description: La notícia ja està als preferits.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "La notícia ja està als preferits."
-        '404':
-          description: No s'ha trobat cap notícia amb aquest identificador.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: "No s'ha trobat cap notícia amb aquest identificador."
-        '401':
-          description: Falta la clau API o és no vàlida.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Cal proporcionar una clau API."
-      security:
-        - api_key: []
-    delete:
-      tags:
-        - news-favorite
-      summary: Eliminar una notícia dels preferits
-      description: Eliminar una notícia especificada pel seu identificador dels preferits de l'usuari.
-      operationId: unfavoriteNews
-      parameters:
-        - name: news_id
-          in: path
-          required: true
-          description: L'identificador de la notícia a eliminar dels preferits.
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Notícia eliminada dels preferits amb èxit.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Notícia eliminada dels preferits."
-                  news_id:
-                    type: integer
-                    example: 1
-        '400':
-          description: La notícia no està als preferits.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "La notícia no està als preferits."
-        '404':
-          description: No s'ha trobat cap notícia amb aquest identificador.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: "No s'ha trobat cap notícia amb aquest identificador."
-        '401':
-          description: Falta la clau API o és no vàlida.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Cal proporcionar una clau API."
-      security:
-        - api_key: []
-
-  /API/comment-favorite/{comment_id}/:
-    post:
-      tags:
-        - comment-favorite
-      summary: Afegir un comentari als preferits
-      description: Afegir un comentari especificat pel seu identificador als preferits de l'usuari.
-      operationId: favoriteComment
-      parameters:
-        - name: comment_id
-          in: path
-          required: true
-          description: L'identificador del comentari a afegir als preferits.
-          schema:
-            type: integer
-      responses:
-        '201':
-          description: Comentari afegit als preferits amb èxit.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Comentari afegit als preferits."
-                  comment_id:
-                    type: integer
-                    example: 1
-        '400':
-          description: El comentari ja està als preferits.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "El comentari ja està als preferits."
-        '404':
-          description: No s'ha trobat cap comentari amb aquest identificador.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: "No s'ha trobat cap comentari amb aquest identificador."
-        '401':
-          description: Falta la clau API o és no vàlida.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Cal proporcionar una clau API."
-      security:
-        - api_key: []
-    delete:
-      tags:
-        - comment-favorite
-      summary: Eliminar un comentari dels preferits
-      description: Eliminar un comentari especificat pel seu identificador dels preferits de l'usuari.
-      operationId: unfavoriteComment
-      parameters:
-        - name: comment_id
-          in: path
-          required: true
-          description: L'identificador del comentari a eliminar dels preferits.
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Comentari eliminat dels preferits amb èxit.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Comentari eliminat dels preferits."
-                  comment_id:
-                    type: integer
-                    example: 1
-        '400':
-          description: El comentari no està als preferits.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "El comentari no està als preferits."
-        '404':
-          description: No s'ha trobat cap comentari amb aquest identificador.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: "No s'ha trobat cap comentari amb aquest identificador."
-        '401':
-          description: Falta la clau API o és no vàlida.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Cal proporcionar una clau API."
-      security:
-        - api_key: []
-
   /API/voted-news/:
     get:
       tags:
@@ -1483,6 +1414,127 @@ paths:
                     type: string
                     example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
 
+  /API/favorite-news/{news_id}/:
+    post:
+      tags:
+        - favorite-news
+      summary: Afegir una notícia als preferits
+      description: Afegir una notícia especificada pel seu identificador als preferits de l'usuari.
+      operationId: favoriteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia a afegir als preferits.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Notícia afegida als preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Notícia afegida als preferits."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: La notícia ja està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La notícia ja està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - favorite-news
+      summary: Eliminar una notícia dels preferits
+      description: Eliminar una notícia especificada pel seu identificador dels preferits de l'usuari.
+      operationId: unfavoriteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia a eliminar dels preferits.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notícia eliminada dels preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Notícia eliminada dels preferits."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: La notícia no està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La notícia no està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+
   /API/favorite-comments/:
     get:
       tags:
@@ -1526,6 +1578,128 @@ paths:
                   error:
                     type: string
                     example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
+  
+  /API/favorite-comments/{comment_id}/:
+    post:
+      tags:
+        - favorite-comments
+      summary: Afegir un comentari als preferits
+      description: Afegir un comentari especificat pel seu identificador als preferits de l'usuari.
+      operationId: favoriteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari a afegir als preferits.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Comentari afegit als preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comentari afegit als preferits."
+                  comment_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: El comentari ja està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "El comentari ja està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - favorite-comments
+      summary: Eliminar un comentari dels preferits
+      description: Eliminar un comentari especificat pel seu identificador dels preferits de l'usuari.
+      operationId: unfavoriteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari a eliminar dels preferits.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comentari eliminat dels preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comentari eliminat dels preferits."
+                  comment_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: El comentari no està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "El comentari no està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
 
   /API/hide/{submission_id}/:
     post:

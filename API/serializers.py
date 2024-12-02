@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+import tldextract
 
 class NewsSerializer(serializers.ModelSerializer):
     # Hacer que author sea de solo lectura
@@ -36,7 +39,7 @@ class NewsSerializer(serializers.ModelSerializer):
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
-        fields = [ 'text', 'author', 'published_date', 'New', 'parent']
+        fields = ['id', 'text', 'author', 'published_date', 'New', 'parent']
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -59,17 +62,21 @@ class ThreadSerializer(serializers.ModelSerializer):
         fields = ['title', 'comments', 'updated_at']
         read_only_fields = ['updated_at']  # El campo `updated_at` es solo de lectura
 
-
 class AskSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
         fields = ['title', 'text', 'author', 'published_date', 'points']
 
 class SubmitSerializer(serializers.ModelSerializer):
+    # Hacer que author sea de solo lectura
+    author = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
     class Meta:
         model = News
-        fields = ['id', 'title', 'url', 'text', 'author']
-        read_only_fields = ['id', 'author']  # El autor se asigna automáticamente
+        fields = ['id', 'title', 'url', 'text', 'author', 'urlDomain']
+        read_only_fields = ['id', 'author', 'urlDomain']
 
     def validate_url(self, value):
         """
@@ -96,18 +103,23 @@ class SubmitSerializer(serializers.ModelSerializer):
             # Si es una ask (no tiene URL)
             if not instance.url:
                 # No permitir añadir URL
-                if data.get('url'):
+                if 'url' in data:
                     raise serializers.ValidationError(
                         "Cannot add URL to an Ask submission"
                     )
             # Si es una news (tiene URL)
             else:
+                # La URL es obligatoria para news
+                if 'url' not in data:
+                    raise serializers.ValidationError(
+                        "URL field is required when updating a News submission"
+                    )
                 # No permitir eliminar URL
-                if 'url' in data and not data.get('url'):
+                if not data.get('url'):
                     raise serializers.ValidationError(
                         "News submissions must maintain a URL"
                     )
-                
+        
         # Para nuevas creaciones
         else:
             if not data.get('url') and not data.get('text'):
@@ -115,19 +127,29 @@ class SubmitSerializer(serializers.ModelSerializer):
                     "Either URL or text must be provided"
                 )
 
+        # Extraer y añadir el urlDomain si hay URL
+        if data.get('url'):
+            data['urlDomain'] = tldextract.extract(data['url']).domain
+
         return data
-        
+
     def create(self, validated_data):
         """
         Crear una nueva noticia/ask con los datos validados
         """
-        is_ask = not validated_data.get('url')
+        # Obtener el usuario del contexto
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user'):
+            raise serializers.ValidationError("No authenticated user found")
 
+        # Asignar el autor (el usuario completo, no solo el email)
+        validated_data['author'] = request.user
+
+        is_ask = not validated_data.get('url')
         if is_ask:
             validated_data['url'] = ''
             validated_data['urlDomain'] = ''
         else:
-
             if validated_data.get('url'):
                 validated_data['urlDomain'] = tldextract.extract(validated_data['url']).domain
             else:

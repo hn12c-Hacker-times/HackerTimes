@@ -189,7 +189,7 @@ class NewestListViewSet(viewsets.ModelViewSet):
 
 class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
-    serializer_class = NewsSerializer
+    serializer_class = SubmitSerializer
     
     def get_serializer_context(self):
         """
@@ -274,7 +274,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
             # Validar campos permitidos
-            allowed_fields = ["title", "text"] if not submission.url else ["title", "url"]
+            allowed_fields = ["title", "text"] if not submission.url else ["title", "url", "text"]
             for key in request.data.keys():
                 if key not in allowed_fields:
                     return Response(
@@ -299,35 +299,38 @@ class SubmitViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, 
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, submission_id):
-        # Obtener la clave API de las cabeceras de la solicitud
+    def destroy(self, request, pk=None):
+        # Verificar API key
         key = request.headers.get('X-API-Key')
         if not key:
             return Response({"error": "L'usuari no ha iniciat sessió"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Intentar obtener al usuario mediante la clave API
         try:
+            # Obtener usuario
             user = CustomUser.objects.get(api_key=key)
+
+            # Obtener submission
+            submission = News.objects.get(id=pk)
+
+            # Verificar autoría
+            if submission.author != user:
+                return Response({"error": "No tens permisos per eliminar aquesta submission"}, 
+                                status=status.HTTP_403_FORBIDDEN)
+
+            # Eliminar submission
+            submission.delete()
+            return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
+
         except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception:
-            return Response({"error": "Api-key amb format incorrecte"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Intentar obtener la submission a eliminar
-        try:
-            submission = News.objects.get(id=submission_id)
+            return Response({"error": "L'usuari no existeix"}, 
+                            status=status.HTTP_404_NOT_FOUND)
         except News.DoesNotExist:
-            return Response({"error": "La submission no existeix"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Verificar que el usuario es el autor de la submission
-        if submission.author != user:
-            return Response({"error": "No tens permisos per eliminar aquesta submission"}, status=status.HTTP_403_FORBIDDEN)
-
-        # Eliminar la submission
-        submission.delete()
-
-        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)  
-
+            return Response({"error": "La submission no existeix"}, 
+                            status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+            
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -617,95 +620,112 @@ class CommentVoteViewSet(viewsets.ViewSet):
             "comment_id": comment.id
         }, status=status.HTTP_200_OK)
     
-class NewsFavoriteViewSet(viewsets.ViewSet):
+class FavoriteNewsViewSet(viewsets.ViewSet):
     """
-    ViewSet per afegir o eliminar notícies de la llista de preferits.
+    API ViewSet per gestionar les notícies preferides d'un usuari.
     """
+
+    def list(self, request):
+        """
+        Crida API per obtenir les notícies preferides d'un usuari.
+        """
+        username = request.query_params.get('username')
+        if not username:
+            return Response({"error": "Cal proporcionar un 'username'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Recuperar l'usuari pel username
+        user = get_object_or_404(CustomUser, username=username)
+
+        # Recuperar les notícies preferides de l'usuari
+        favorite_news = user.favorite_news.all().order_by('-published_date')
+        serializer = NewsSerializer(favorite_news, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, pk=None):
         """
-        Crida API per afegir una notícia als preferits.
+        Afegir una notícia a la llista de preferits de l'usuari autenticat.
         """
         user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
         news = get_news_or_404(pk)
-
         if news in user.favorite_news.all():
             return Response({"error": "La notícia ja està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Afegir als preferits
         user.favorite_news.add(news)
-        return Response({
-            "message": "Notícia afegida als preferits.",
-            "news_id": news.id
-        }, status=status.HTTP_201_CREATED)
+        return Response({"message": "Notícia afegida als preferits.", "news_id": news.id}, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, pk=None):
+    def destroy(self, request, pk=None):
         """
-        Crida API per eliminar una notícia dels preferits.
+        Eliminar una notícia de la llista de preferits de l'usuari autenticat.
         """
         user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
         news = get_news_or_404(pk)
-
         if news not in user.favorite_news.all():
             return Response({"error": "La notícia no està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Eliminar dels preferits
         user.favorite_news.remove(news)
-        return Response({
-            "message": "Notícia eliminada dels preferits.",
-            "news_id": news.id
-        }, status=status.HTTP_200_OK)
-    
-class CommentFavoriteViewSet(viewsets.ViewSet):
+        return Response({"message": "Notícia eliminada dels preferits.", "news_id": news.id}, status=status.HTTP_200_OK)
+
+
+class FavoriteCommentsViewSet(viewsets.ViewSet):
     """
-    ViewSet per afegir o eliminar comentaris de la llista de preferits.
+    API ViewSet per gestionar els comentaris preferits d'un usuari.
     """
+
+    def list(self, request):
+        """
+        Crida API per obtenir els comentaris preferits d'un usuari.
+        """
+        username = request.query_params.get('username')
+        if not username:
+            return Response({"error": "Cal proporcionar un 'username'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Recuperar l'usuari pel username
+        user = get_object_or_404(CustomUser, username=username)
+
+        # Recuperar els comentaris preferits de l'usuari
+        favorite_comments = user.favorite_comments.all().order_by('-published_date')
+        serializer = CommentsSerializer(favorite_comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, pk=None):
         """
-        Crida API per afegir un comentari als preferits.
+        Afegir un comentari a la llista de preferits de l'usuari autenticat.
         """
         user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
         comment = get_comment_or_404(pk)
-
         if comment in user.favorite_comments.all():
             return Response({"error": "El comentari ja està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Afegir als preferits
         user.favorite_comments.add(comment)
-        return Response({
-            "message": "Comentari afegit als preferits.",
-            "comment_id": comment.id
-        }, status=status.HTTP_201_CREATED)
+        return Response({"message": "Comentari afegit als preferits.", "comment_id": comment.id}, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, pk=None):
+    def destroy(self, request, pk=None):
         """
-        Crida API per eliminar un comentari dels preferits.
+        Eliminar un comentari de la llista de preferits de l'usuari autenticat.
         """
         user, error_response = validate_api_key(request)
         if error_response:
             return error_response
 
         comment = get_comment_or_404(pk)
-
         if comment not in user.favorite_comments.all():
             return Response({"error": "El comentari no està als preferits."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Eliminar dels preferits
         user.favorite_comments.remove(comment)
-        return Response({
-            "message": "Comentari eliminat dels preferits.",
-            "comment_id": comment.id
-        }, status=status.HTTP_200_OK)
+        return Response({"message": "Comentari eliminat dels preferits.", "comment_id": comment.id}, status=status.HTTP_200_OK)
 
 class VotedNewsViewSet(viewsets.ViewSet):
     """
@@ -742,52 +762,30 @@ class VotedCommentsViewSet(viewsets.ViewSet):
         voted_comments = user.voted_comments.all().order_by('-published_date')
         serializer = CommentsSerializer(voted_comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-class FavoriteNewsViewSet(viewsets.ViewSet):
-    """
-    API ViewSet per obtenir les notícies preferides d'un usuari.
-    """
-    def list(self, request):
-        """
-        Crida API per obtenir les notícies preferides d'un usuari.
-        """
-        username = request.query_params.get('username')
-        if not username:
-            return Response({"error": "Cal proporcionar un 'username'."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Recuperar l'usuari pel username
-        user = get_object_or_404(CustomUser, username=username)
-
-        # Recuperar les notícies preferides de l'usuari
-        favorite_news = user.favorite_news.all().order_by('-published_date')
-        serializer = NewsSerializer(favorite_news, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-class FavoriteCommentsViewSet(viewsets.ViewSet):
-    """
-    API ViewSet per obtenir els comentaris preferits d'un usuari.
-    """
-    def list(self, request):
-        """
-        Crida API per obtenir els comentaris preferits d'un usuari.
-        """
-        username = request.query_params.get('username')
-        if not username:
-            return Response({"error": "Cal proporcionar un 'username'."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Recuperar l'usuari pel username
-        user = get_object_or_404(CustomUser, username=username)
-
-        # Recuperar els comentaris preferits de l'usuari
-        favorite_comments = user.favorite_comments.all().order_by('-published_date')
-        serializer = CommentsSerializer(favorite_comments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
     
 class CommentViewSet(viewsets.ViewSet):
     """
     API ViewSet per gestionar els comentaris.
     """
+    def list(self, request):
+        """
+        Retorna una llista de comentaris o els comentaris d'un usuari si s'especifica el `username`.
+        """
+        username = request.query_params.get('username')
+        if username:
+            # Recuperar l'usuari pel username
+            user = get_object_or_404(CustomUser, username=username)
 
+            # Recuperar els comentaris de l'usuari
+            comments = Comments.objects.filter(author=user).order_by('-published_date')
+            serializer = CommentsSerializer(comments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Recuperar tots els comentaris si no s'especifica el `username`
+        comments = Comments.objects.all().order_by('-published_date')
+        serializer = CommentsSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     def retrieve(self, request, pk=None):
         """
         Retorna un comentari específic pel seu identificador.
