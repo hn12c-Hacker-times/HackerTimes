@@ -36,7 +36,7 @@ class NewsSerializer(serializers.ModelSerializer):
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
-        fields = [ 'text', 'author', 'published_date', 'New', 'parent']
+        fields = ['id', 'text', 'author', 'published_date', 'New', 'parent']
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
