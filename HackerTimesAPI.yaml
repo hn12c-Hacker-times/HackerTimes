@@ -18,7 +18,7 @@ info:
     Some useful links:
 
     - [The Pet Store
-    repository](https://127.0.0.1/)
+    repository](https://hackertimes-0dd5aa346ba7.herokuapp.com/)
 
     - [The source API definition for HackerTimes
     Store](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
@@ -31,39 +31,39 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.11
 servers:
-  - url: http://127.0.0.1:8000
+  - url: https://hackertimes-0dd5aa346ba7.herokuapp.com/
 tags:
   - name: news
     description: News ordenades per relevància
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/
   - name: newest
     description: News ordenades per data
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/newest/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/newest/
   - name: ask
     description: Asks ordenades per data
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/ask/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/ask/
   - name: thread
     description: threads ordenats per data
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/threads/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/threads/
   - name: user
     description: Operacions de usuaris
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/user/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/user/
 
   - name: submit
     description: Operacions de submissions
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/submit/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/
 
   - name: comment
     description: Operacions de submissions
