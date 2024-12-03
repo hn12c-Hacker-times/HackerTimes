@@ -1,11 +1,7 @@
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-<<<<<<< HEAD
-from .views import NewListView, SubmitViewSet
-=======
 from .views import CommentViewSet, CommentVoteViewSet, FavoriteCommentsViewSet, FavoriteNewsViewSet, NewListViewSet, AskViewSet, NewsVoteViewSet, SubmitViewSet, CustomUserViewSet, NewestListViewSet, ThreadViewSet, VotedCommentsViewSet, VotedNewsViewSet, HideSubmissionViewSet, UnhideSubmissionViewSet, HiddenSubmissionsViewSet
->>>>>>> develop
 from . import views
 from rest_framework.routers import DefaultRouter
 

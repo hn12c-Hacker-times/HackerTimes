@@ -2,6 +2,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
+from django.conf import settings
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -12,8 +13,8 @@ from django.core.exceptions import ValidationError
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
-from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, SubmitSerializer
-import tldextract
+from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, AskSerializer, SubmitSerializer
+import tldextract, boto3
 
 # Create your views here.
 """
@@ -86,8 +87,22 @@ class NewListViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         user_data = self.request.session.get('user_data')
+        name = request.query_params.get("name","")
         user_email = user_data.get('email') if user_data else None
-        username = self.request.GET.get("username", "")
+        name = request.query_params.get("name","")
+        username = request.query_params.get("username","")
+        email = request.query_params.get("email","")
+
+        if name:
+            queryset = News.objects.filter(title__icontains=name)
+        else:
+            queryset = News.objects.all()
+        if username:
+            author = CustomUser.objects.filter(username=username).first()
+            if author:
+                queryset = queryset.filter(author=author.email)
+        if email:
+            queryset = queryset.filter(author=email)
 
         if user_data:
             user = CustomUser.objects.get(email=user_data['email'])
@@ -96,19 +111,9 @@ class NewListViewSet(viewsets.ModelViewSet):
             # Obtener las noticias ocultas de ese usuario
             hidden_news_ids = HiddenNews.objects.filter(user=user).values_list('news_id', flat=True)
             #print(f"Hidden news IDs: {list(hidden_news_ids)}")  # Ver los IDs de noticias ocultas
-
-            # Si hay un nombre de usuario, mostrar solo las noticias de ese usuario
-            if username:
-                author = CustomUser.objects.filter(username=username).first()
-                if author:
-                    queryset = News.objects.filter(author=author, is_hidden=False).exclude(id__in=hidden_news_ids).order_by('-published_date')
-                    #print(f"Query for author '{username}': {queryset}")  # Ver la consulta para el autor
-                    if not queryset.exists():
-                        return Response(NewsSerializer(News.objects.none(), many=True).data, status=status.HTTP_404_NOT_FOUND)
-                    return Response(NewsSerializer(annotate_user_votes(queryset, user_email), many=True).data, status=status.HTTP_200_OK)
             
             # Excluir las noticias ocultas para el usuario actual y ordenarlas por puntos
-            queryset = News.objects.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
+            queryset = queryset.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
 
             # Calculate relevance for each item and sort manually
             news_list = list(queryset)
@@ -119,9 +124,8 @@ class NewListViewSet(viewsets.ModelViewSet):
             sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
             return Response(NewsSerializer(annotate_user_votes(sorted_queryset, user_email), many=True).data, status=status.HTTP_200_OK)
 
-        # Si el usuario no está logueado, solo mostrar las noticias no ocultas
-        queryset = News.objects.filter(is_hidden=False)
-
+        # Si el usuario no está logueado, mostrar todas las noticias
+        
         # Calculate relevance for each item and sort manually
         news_list = list(queryset)
         news_list.sort(
@@ -185,7 +189,7 @@ class NewestListViewSet(viewsets.ModelViewSet):
 
 class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
-    serializer_class = SubmitSerializer
+    serializer_class = NewsSerializer
     
     def get_serializer_context(self):
         """
@@ -270,7 +274,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
             # Validar campos permitidos
-            allowed_fields = ["title", "text"] if not submission.url else ["title", "url", "text"]
+            allowed_fields = ["title", "text"] if not submission.url else ["title", "url"]
             for key in request.data.keys():
                 if key not in allowed_fields:
                     return Response(
@@ -295,38 +299,35 @@ class SubmitViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, 
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
-        # Verificar API key
+    def delete(self, request, submission_id):
+        # Obtener la clave API de las cabeceras de la solicitud
         key = request.headers.get('X-API-Key')
         if not key:
             return Response({"error": "L'usuari no ha iniciat sessió"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        # Intentar obtener al usuario mediante la clave API
         try:
-            # Obtener usuario
             user = CustomUser.objects.get(api_key=key)
-
-            # Obtener submission
-            submission = News.objects.get(id=pk)
-
-            # Verificar autoría
-            if submission.author != user:
-                return Response({"error": "No tens permisos per eliminar aquesta submission"}, 
-                                status=status.HTTP_403_FORBIDDEN)
-
-            # Eliminar submission
-            submission.delete()
-            return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
-
         except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"}, 
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "L'usuari no existeix"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Api-key amb format incorrecte"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Intentar obtener la submission a eliminar
+        try:
+            submission = News.objects.get(id=submission_id)
         except News.DoesNotExist:
-            return Response({"error": "La submission no existeix"}, 
-                            status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, 
-                            status=status.HTTP_400_BAD_REQUEST)
-            
+            return Response({"error": "La submission no existeix"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar que el usuario es el autor de la submission
+        if submission.author != user:
+            return Response({"error": "No tens permisos per eliminar aquesta submission"}, status=status.HTTP_403_FORBIDDEN)
+
+        # Eliminar la submission
+        submission.delete()
+
+        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)  
+
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
