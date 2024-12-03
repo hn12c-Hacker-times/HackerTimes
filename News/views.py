@@ -551,9 +551,19 @@ def login(request):
                         min_away=180,
                         delay=0
                     )
-                request.session['user_data'] = user_data  # Almacenar datos del usuario en la sesión
-                request.session['user_data']['karma'] = user.karma  # Add karma to user_data
-                return redirect('news:submit_news')  # Redirigir a la vista de submit para crear noticias
+                user_data['karma'] = user.karma
+                request.session['user_data'] = user_data
+                
+                # Get the current scheme (http or https)
+                scheme = request.scheme
+                
+                # Determine redirect URL based on host
+                if is_local:
+                    # Use the same host that was used to access the site
+                    return redirect(f'{scheme}://{host}/submit/')
+                else:
+                    return redirect('https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/')
+                    
             except ValueError:
                 return HttpResponse(status=403)  # Token no válido
     
