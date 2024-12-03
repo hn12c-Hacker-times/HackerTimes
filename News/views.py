@@ -549,6 +549,7 @@ def login(request):
                         min_away=180,
                         delay=0
                     )
+                user_data['karma'] = user.karma
                 request.session['user_data'] = user_data
                 
                 # Get the current scheme (http or https)
