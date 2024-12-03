@@ -211,7 +211,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
         api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
         if not api_key:
             return Response(
-                {"error": "API key is required"}, 
+                {'error': "Cal proporcionar l'API Key"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -230,7 +230,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
             
         except CustomUser.DoesNotExist:
             return Response(
-                {"error": "Invalid API key"}, 
+                {'error': 'API key no vàlida'}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
@@ -444,7 +444,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
         api_key = request.headers.get('X-API-Key') or request.query_params.get('api_key')
         if not api_key:
             return Response(
-                {"error": "API key is required"}, 
+                {'error': "Cal proporcionar l'API Key"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -491,7 +491,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
 
         except CustomUser.DoesNotExist:
             return Response(
-                {"error": "Invalid API key"}, 
+                {'error': 'API key no vàlida'}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
