@@ -1,0 +1,2113 @@
+openapi: 3.0.3
+info:
+  title: HackerTimes  - OpenAPI 3.0
+  description: >-
+    Aquesta es l'especificació de la nostra API, feta per:
+    
+      -Arnau Cruz
+    
+      -Lorenzo Ricci
+    
+      -Noelia Lopez
+    
+      -Enrique Andujar
+    
+
+
+
+    Some useful links:
+
+    - [The Pet Store
+    repository](https://127.0.0.1/)
+
+    - [The source API definition for HackerTimes
+    Store](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
+    
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: contact@hackerTimes.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: http://127.0.0.1:8000
+tags:
+  - name: news
+    description: News ordenades per relevància
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/
+  - name: newest
+    description: News ordenades per data
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/newest/
+  - name: ask
+    description: Asks ordenades per data
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/ask/
+  - name: thread
+    description: threads ordenats per data
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/threads/
+  - name: user
+    description: Operacions de usuaris
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/user/
+
+  - name: submit
+    description: Operacions de submissions
+    externalDocs:
+      description: Mira-ho en format web
+      url: http://127.0.0.1:8000/submit/
+
+  - name: comment
+    description: Operacions de submissions
+  - name: news-vote
+    description: Operacions per votar i desvotar news
+  - name: comment-vote
+    description: Operacions per votar i desvotar comentaris
+  - name: voted-news
+    description: Llistat de news votades per l'usuari
+  - name: voted-comments
+    description: Llistat de comentaris votats per l'usuari
+  - name: favorite-news
+    description: Llistat de news preferides per l'usuari, afegir o eliminar notícies dels preferits
+  - name: favorite-comments
+    description: Llistat de comentaris preferits per l'usuari, afegir o eliminar comentaris dels preferits
+  - name: hide
+    description: Operacions per amagar submissions
+  - name: unhide
+    description: Operacions per desamagar submissions
+  - name: hidden-submissions
+    description: Operacions per obtenir submissions amagades
+
+paths:
+  /API/ask/:
+    get:
+      tags:
+        - ask
+      summary: Recupera una llista d'asks
+      description: Recupera tots els asks ordenats per rellevància i data de publicació.
+      operationId: getAsks
+      responses:
+        '200':
+          description: Llista d'asks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ask'
+        '401':
+          description: Accés no autoritzat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: No autoritzat
+        '404':
+          description: No s'han trobat asks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: No trobat
+
+  /API/threads/:
+    get:
+      tags:
+        - thread
+      summary: Recupera una llista de threads
+      description: Recupera tots els threads associats amb l'usuari autenticat mitjançant la seva API key.
+      operationId: getThreads
+      responses:
+        '200':
+          description: Llista de threads recuperada correctament
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Thread'
+        '400':
+          description: Petició incorrecta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Petició incorrecta"
+        '401':
+          description: Accés no autoritzat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Credencials d'autenticació no proporcionades"
+        '404':
+          description: No s'han trobat threads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No trobat"
+      security:
+        - api_key: []
+
+  /API/:
+    get:
+      tags:
+        - news
+      summary: Llista de news
+      description: La llista de news ordenada per relevancia
+      operationId: getNews
+      parameters:
+        - name: name
+          in: query
+          description: Indica un nom per filtrar les news que contenen aquest nom
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: Indica un username per filtrar pel username del author
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Indica un email per filtrar pel email del author
+          required: false
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+
+  /API/newest/:
+    get:
+      tags:
+        - newest
+      summary: Llista de noves news
+      description: La llista de news ordenada per data
+      operationId: getNewest
+      parameters:
+        - name: name
+          in: query
+          description: Indica un nom per filtrar les news que contenen aquest nom
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: Indica un username per filtrar pel username del author
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Indica un email per filtrar pel rmail del author
+          required: false
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+
+  /API/user/:
+    get:
+      tags:
+        - user
+      summary: El teu usuari
+      description: Retorna el teu propi usuari
+      operationId: getYourUser
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Api-key amb format incorrecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Api-key amb format incorrecte"
+        '401':
+          description: L'usuari no ha iniciat sessió
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha iniciat sessió"
+      security:
+        - api_key:
+            - read:user
+
+  /API/user/update/:
+    put:
+      tags:
+        - user
+      summary: Modifica el teu usuari
+      description: Edita el teu propi usuari, amb els camps que vulguis
+      operationId: editYourUser
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "username"
+                  description: "Cambia el teu username"
+                about:
+                  type: string
+                  example: "Hey, there!"
+                  description: "Cambia el teu about"
+                remove_banner:
+                  type: string
+                  format: string
+                  description: "Marca la casella de \"Send empy value\" per esborrar el banner"
+                remove_avatar:
+                  type: string
+                  format: string
+                  description: "Marca la casella de \"Send empy value\" per esborrar el avatar"
+                banner_file:
+                  type: string
+                  format: binary
+                  description: "Arxiu de banner (imagen)"
+                avatar_file:
+                  type: string
+                  format: binary
+                  description: "Arxiu de avatar (imagen)"
+
+
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Api-key amb format incorrecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Api-key amb format incorrecte // El nom d'usuari ja existeix // No es pot modificar el camp, o aquest no existeix $CAMP"
+
+        '401':
+          description: L'usuari no ha iniciat sessió
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha iniciat sessió"
+
+      security:
+        - api_key:
+            - write:user
+            - read:user
+
+  /API/user/delete/:
+    delete:
+      tags:
+        - user
+      summary: Esborra el teu usuari
+      description: Esborra el teu propi usuari
+      operationId: deleteYourUser
+      responses:
+        '204':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Usuari esborrat correctament"
+        '400':
+          description: Api-key amb format incorrecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Api-key amb format incorrecte"
+        '401':
+          description: L'usuari no ha iniciat sessió
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha iniciat sessió"
+        '404':
+          description: Usuari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no existeix"
+      security:
+        - api_key:
+            - write:user
+            - read:user
+
+  /API/user/{email}/:
+    get:
+      tags:
+        - user
+      summary: Un usuari específic
+      description: Retorna el usuari amb email igual que el del path
+      operationId: getUser
+      parameters:
+        - name: email
+          in: path
+          description: Email del usuari
+          required: true
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Usuari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no existeix"
+
+  /API/submit/:
+    post:
+      tags:
+        - submit
+      summary: Creació d'una nova submission
+      description: Crea una nova notícia o una pregunta (ask)
+      operationId: createSubmit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Títol d'exemple"
+                url:
+                  type: string
+                  example: "https://example.com"
+                text:
+                  type: string
+                  example: "Aquest és el contingut"
+              required:
+                - title
+      responses:
+        '201':
+          description: Creada correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+                example:
+                  {
+                    "id": 1,
+                    "title": "Títol d'exemple",
+                    "url": "https://example.com",
+                    "text": "Aquest és el contingut",
+                    "author": "user@example.com"
+                  }
+        '400':
+          description: Error de validació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                missing_fields:
+                  value:
+                    error: "S'ha de proporcionar l'URL o el text"
+                invalid_url:
+                  value:
+                    error: "Format d'URL no vàlid. Si us plau, proporcioneu una URL vàlida (p. ex., https://example.com)"
+                unauthenticated:
+                  value:
+                    error: "No s'ha trobat cap usuari autenticat"
+        '401':
+          description: Error d'autenticació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                missing_api_key:
+                  value:
+                    error: "Cal proporcionar l'Api Key"
+                invalid_api_key:
+                  value:
+                    error: "Clau API no vàlida"
+      security:
+        - api_key: []
+
+  /API/submit/{id}/:
+    put:
+      tags:
+        - submit
+      summary: Modifica una submission existent
+      description: Modifica una new o una ask pel seu id, en cas de ser
+                   una ask no s'ha d'inclure el camp url
+      operationId: updateSubmit
+      parameters:
+        - name: id
+          in: path
+          description: ID de la submission a actualitzar
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Títol actualitzat"
+                url:
+                  type: string
+                  example: "https://example.com"
+                text:
+                  type: string
+                  example: "Contingut actualitzat"
+      responses:
+        '200':
+          description: Actualitzada correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+              example:
+                {
+                  "id": 1,
+                  "title": "Títol actualitzat",
+                  "url": "https://example.com",
+                  "text": "Contingut actualitzat",
+                  "author": "user@example.com"
+                }
+        '400':
+          description: Error de validació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                invalid_fields:
+                  value:
+                    error: "No es pot modificar el camp, o aquest no existeix"
+                invalid_url:
+                  value:
+                    error: "Format d'URL no vàlid"
+                add_url_to_ask:
+                  value:
+                    error: "No es pot afegir URL a ask"
+                remove_url_from_news:
+                  value:
+                    error: "Les notícies han de mantenir una URL"
+        '401':
+          description: Error d'autenticació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "L'usuari no ha iniciat sessió"
+        '403':
+          description: Error de permisos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "No tens permisos per editar aquesta submission"
+        '404':
+          description: No trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                user_not_found:
+                  value:
+                    error: "L'usuari no existeix"
+                submission_not_found:
+                  value:
+                    error: "La submission no existeix"
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - submit
+      summary: Esborra una submission
+      description: Esborra una notícia o pregunta pel seu id
+      operationId: deleteSubmit
+      parameters:
+        - name: id
+          in: path
+          description: ID de la submission a esborrar
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Esborrada correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Submission esborrada correctament"
+        '401':
+          description: Error d'autenticació
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "L'usuari no ha iniciat sessió"
+        '403':
+          description: Error de permisos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "No tens permisos per eliminar aquesta submission"
+        '404':
+          description: No trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                user_not_found:
+                  value:
+                    error: "L'usuari no existeix"
+                submission_not_found:
+                  value:
+                    error: "La submission no existeix"
+      security:
+        - api_key: []
+        
+    get:
+      summary: Obtenir una submission específica
+      tags: 
+        - submit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la submission
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalls de la submission recuperats correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+              example:
+                {
+                  "id": 1,
+                  "title": "Submission d'exemple",
+                  "url": "https://example.com",
+                  "text": "Aquest és el contingut",
+                  "author": "user@example.com"
+                }
+        '404':
+          description: No trobada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "La submission no existeix"
+                  
+  /API/comment/:
+    get:
+      tags:
+        - comment
+      summary: Llista de comentaris
+      description: |
+        Retorna una llista de tots els comentaris. Si s'especifica el paràmetre `username`, es retornen només els comentaris d'aquest usuari.
+      operationId: listComments
+      parameters:
+        - name: username
+          in: query
+          description: El `username` de l'usuari per recuperar els seus comentaris.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Llista de comentaris retornada correctament.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '404':
+          description: Usuari no trobat (si es proporciona `username` i no existeix).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
+    post:
+      tags:
+        - comment
+      summary: Crear un nou comentari
+      description: Crear un comentari per a una notícia específica (sense pare).
+      operationId: createComment
+      requestBody:
+        description: Dades necessàries per crear el comentari
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                news_id:
+                  type: integer
+                  example: 4
+                text:
+                  type: string
+                  example: "Aquest és un comentari nou."
+      responses:
+        '201':
+          description: Comentari creat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Error en les dades proporcionades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "S'han de proporcionar tant el 'news_id' com el 'text'."
+        '404':
+          description: Notícia no trobada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+  /API/comment/{id}/:
+    get:
+      tags:
+        - comment
+      summary: Obtenir un comentari
+      description: Retorna un comentari específic pel seu identificador.
+      operationId: getComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comentari retornat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+
+    put:
+      tags:
+        - comment
+      summary: Editar un comentari
+      description: Edita un comentari existent creat per l'usuari autenticat.
+      operationId: editComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Dades necessàries per editar el comentari
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  example: "Text editat del comentari."
+      responses:
+        '200':
+          description: Comentari editat correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '403':
+          description: No autoritzat per editar el comentari
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots editar comentaris d'un altre usuari."
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - comment
+      summary: Eliminar un comentari
+      description: Elimina un comentari existent creat per l'usuari autenticat.
+      operationId: deleteComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Comentari eliminat correctament
+        '403':
+          description: No autoritzat per eliminar el comentari
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots eliminar comentaris d'un altre usuari."
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/comment/{id}/reply/:
+    post:
+      tags:
+        - comment
+      summary: Respondre a un comentari
+      description: Crear una resposta a un comentari existent.
+      operationId: replyToComment
+      parameters:
+        - name: id
+          in: path
+          description: Identificador del comentari pare
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Dades necessàries per crear la resposta
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  example: "Aquest és un comentari de resposta."
+      responses:
+        '201':
+          description: Resposta creada correctament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Error en les dades proporcionades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "S'ha de proporcionar el 'text' per al comentari."
+        '404':
+          description: Comentari no trobat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/news-vote/{news_id}/:
+    post:
+      tags:
+        - news-vote
+      summary: Vota una notícia
+      description: Permet votar una notícia especificada pel seu `news_id`.
+      operationId: voteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia que es vol votar.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Vot registrat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot registrat correctament."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: L'usuari ja ha votat aquesta notícia.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari ja ha votat aquesta notícia."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '403':
+          description: L'usuari no pot votar les seves pròpies notícies.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots votar les teves pròpies notícies."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+    delete:
+      tags:
+        - news-vote
+      summary: Desvota una notícia
+      description: Permet eliminar un vot d'una notícia especificada pel seu `news_id`.
+      operationId: unvoteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia que es vol desvotar.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vot eliminat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot eliminat correctament."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: L'usuari no ha votat aquesta notícia.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha votat aquesta notícia."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/comment-vote/{comment_id}/:
+    post:
+      tags:
+        - comment-vote
+      summary: Vota un comentari
+      description: Permet votar un comentari especificat pel seu `comment_id`.
+      operationId: voteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari que es vol votar.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Vot registrat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot registrat correctament."
+                  comment_id:
+                    type: integer
+                    example: 42
+        '400':
+          description: L'usuari ja ha votat aquest comentari.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari ja ha votat aquest comentari."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '403':
+          description: L'usuari no pot votar els seus propis comentaris.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No pots votar els teus propis comentaris."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+    delete:
+      tags:
+        - comment-vote
+      summary: Desvota un comentari
+      description: Permet eliminar un vot d'un comentari especificat pel seu `comment_id`.
+      operationId: unvoteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari que es vol desvotar.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vot eliminat amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vot eliminat correctament."
+                  comment_id:
+                    type: integer
+                    example: 42
+        '400':
+          description: L'usuari no ha votat aquest comentari.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "L'usuari no ha votat aquest comentari."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/voted-news/:
+    get:
+      tags:
+        - voted-news
+      summary: Notícies votades
+      description: Recupera les notícies votades per l'usuari autenticat.
+      operationId: getVotedNews
+      responses:
+        '200':
+          description: Llistat de notícies votades amb èxit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/News'
+        '401':
+          description: Clau API no vàlida o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '403':
+          description: Accés no autoritzat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Accés no autoritzat."
+      security:
+        - api_key: []
+
+  /API/voted-comments/:
+    get:
+      tags:
+        - voted-comments
+      summary: Comentaris votats
+      description: Recupera els comentaris votats per l'usuari autenticat.
+      operationId: getVotedComments
+      responses:
+        '200':
+          description: Llistat de comentaris votats amb èxit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '401':
+          description: Clau API no vàlida o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '403':
+          description: Accés no autoritzat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Accés no autoritzat."
+      security:
+        - api_key: []
+
+  /API/favorite-news/:
+    get:
+      tags:
+        - favorite-news
+      summary: Notícies preferides
+      description: Recupera les notícies preferides d'un usuari públicament. Es requereix el paràmetre `username`.
+      operationId: getFavoriteNews
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: El `username` de l'usuari les notícies preferides del qual es volen obtenir.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notícies preferides recuperades amb èxit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/News'
+        '400':
+          description: Falta el paràmetre `username`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar un 'username'."
+        '404':
+          description: Usuari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
+
+  /API/favorite-news/{news_id}/:
+    post:
+      tags:
+        - favorite-news
+      summary: Afegir una notícia als preferits
+      description: Afegir una notícia especificada pel seu identificador als preferits de l'usuari.
+      operationId: favoriteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia a afegir als preferits.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Notícia afegida als preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Notícia afegida als preferits."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: La notícia ja està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La notícia ja està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - favorite-news
+      summary: Eliminar una notícia dels preferits
+      description: Eliminar una notícia especificada pel seu identificador dels preferits de l'usuari.
+      operationId: unfavoriteNews
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: L'identificador de la notícia a eliminar dels preferits.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notícia eliminada dels preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Notícia eliminada dels preferits."
+                  news_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: La notícia no està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La notícia no està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Notícia no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap notícia amb aquest identificador."
+      security:
+        - api_key: []
+
+  /API/favorite-comments/:
+    get:
+      tags:
+        - favorite-comments
+      summary: Comentaris preferits
+      description: Recupera els comentaris preferits d'un usuari públicament. Es requereix el paràmetre `username`.
+      operationId: getFavoriteComments
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: El `username` de l'usuari els comentaris preferits del qual es volen obtenir.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comentaris preferits recuperats amb èxit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '400':
+          description: Falta el paràmetre `username`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar un 'username'."
+        '404':
+          description: Usuari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No s'ha trobat cap usuari amb aquest nom d'usuari."
+  
+  /API/favorite-comments/{comment_id}/:
+    post:
+      tags:
+        - favorite-comments
+      summary: Afegir un comentari als preferits
+      description: Afegir un comentari especificat pel seu identificador als preferits de l'usuari.
+      operationId: favoriteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari a afegir als preferits.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Comentari afegit als preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comentari afegit als preferits."
+                  comment_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: El comentari ja està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "El comentari ja està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+    delete:
+      tags:
+        - favorite-comments
+      summary: Eliminar un comentari dels preferits
+      description: Eliminar un comentari especificat pel seu identificador dels preferits de l'usuari.
+      operationId: unfavoriteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: L'identificador del comentari a eliminar dels preferits.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comentari eliminat dels preferits amb èxit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comentari eliminat dels preferits."
+                  comment_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: El comentari no està als preferits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "El comentari no està als preferits."
+        '401':
+          description: Falta la clau API o és no vàlida.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cal proporcionar una clau API."
+        '404':
+          description: Comentari no trobat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "No s'ha trobat cap comentari amb aquest identificador."
+      security:
+        - api_key: []
+
+
+  /API/hide/{submission_id}/:
+    post:
+      tags:
+        - hide
+      summary: Amaga una submission
+      description: Amaga una submission especificada pel seu identificador només per a l'usuari autenticat.
+      operationId: hideSubmission
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          description: L'identificador de la submission que es vol amagar.
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Submission amagada correctament.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "La submission s'ha amagat correctament."
+                  submission_id:
+                    type: integer
+                    example: 3
+        '400':
+          description: La submission ja està amagada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Aquesta submission ja està amagada."
+        '404':
+          description: Submission no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La submission no existeix."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+      security:
+        - api_key: []
+
+  /API/unhide/{submission_id}/:
+    delete:
+      tags:
+        - unhide
+      summary: Desamaga una submission
+      description: Desamaga una submission especificada pel seu identificador només per a l'usuari autenticat.
+      operationId: unhideSubmission
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          description: L'identificador de la submission que es vol desamagar.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Submission desamagada correctament.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "La submission s'ha desamagat correctament."
+                  submission_id:
+                    type: integer
+                    example: 3
+        '400':
+          description: La submission no està amagada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Aquesta submission no està amagada."
+        '404':
+          description: Submission no trobada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "La submission no existeix."
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+      security:
+        - api_key: []
+
+  /API/hidden-submissions/:
+    get:
+      tags:
+        - hidden-submissions
+      summary: Obtenir submissions amagades
+      description: Recupera totes les submissions amagades per a l'usuari autenticat.
+      operationId: getHiddenSubmissions
+      responses:
+        '200':
+          description: Llistat de submissions amagades retornades correctament.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hidden_submissions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        submission_id:
+                          type: integer
+                          description: L'identificador de la submission amagada.
+                          example: 2
+                        title:
+                          type: string
+                          description: El títol de la submission amagada.
+                          example: "Test title"
+                        url:
+                          type: string
+                          description: La URL de la submission amagada (si n'hi ha).
+                          example: "http://example.com"
+                        text:
+                          type: string
+                          description: El text de la submission amagada (si és una ask).
+                          example: "This would be the text"
+                        hidden_at:
+                          type: string
+                          format: date-time
+                          description: La data i hora en què es va amagar la submission.
+                          example: "2024-12-02T11:49:15.810784Z"
+        '401':
+          description: Clau API incorrecta o no proporcionada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Clau API no vàlida."
+      security:
+        - api_key: []
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          description: username del usuari
+          example: Username
+        email:
+          description: email del usuari
+          type: string
+          example: user@email.com
+        created_at:
+          description: data i hora del moment de creació de l'usuari, en el format de l'exemple
+          type: string
+          example: YYYY-MM-DDTHH:MM:SS.MMMMMMZ
+        karma:
+          description: karma points del usuari
+          type: integer
+          example: 1
+        about:
+          type: string
+          description: l'about del usuari, pot ser null
+          example: Un about
+        banner:
+          type: string
+          description: l'url de la imatge de banner que té l'usuari
+          example: image.com/4
+        avatar:
+          description: l'url de la imatge de avatar que té l'usuari
+          type: string
+          example: image.com/5
+        show-dead:
+          type: boolean
+          description: User Status
+          example: true
+        no_procrastinate:
+          type: boolean
+          description: User Status
+          example: true
+        max_visit:
+          type: integer
+          example: 1
+        min_away:
+          type: integer
+          example: 1
+        delay:
+          type: integer
+          example: 1
+        favorite_news:
+          description: llista de news favorites de l'usuari
+          type: array
+          items:
+            $ref: '#/components/schemas/News'
+          example: []
+        favorite_comments:
+          description: llista de comments favorits de l'usuari
+          type: string
+          example: []
+
+
+    News:
+      required:
+        - name
+        - photoUrls
+      type: object
+      properties:
+        title:
+          type: string
+          example: Test title
+        url:
+          type: string
+          description: the news's url
+          example: http://example.com
+        urlDomain:
+          type: string
+          description: the news's domain
+          example: example.com
+        text:
+          type: string
+          description: the news's text
+          example: This would be the new text
+        author:
+          type: string
+          description: the news's author email
+          example: author@example.com
+        points:
+          type: integer
+          description: pet status in the store
+          example: 20
+        is_hidden:
+          type: boolean
+          description: is the new hidden?
+          example: false
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        error:
+          type: string
+          description: >-
+            Un string amb els detalls de l'error(No estarà la response si
+            aquesta retorna un detail o objectes correctament)
+          example: L'usuari no ha iniciat sessió
+        detail:
+          type: string
+          description: >-
+            Un string amb els detalls de l'operació(No estarà la response si
+            aquesta retorna un error o objectes correctament)
+          example: Operació exitosa, new creada!
+      xml:
+        name: '##default'
+    Ask:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Example Ask Title"
+        text:
+          type: string
+          example: "This is the content of the ask."
+        author:
+          type: string
+          example: "arnau.cruz@estudiantat.upc.edu"
+        published_date:
+          type: string
+          format: date-time
+          example: "2024-11-23T10:43:17.202193Z"
+        points:
+          type: integer
+          example: 2
+    Thread:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Example Thread Title"
+        comments:
+          type: array
+          items:
+            type: string
+          example:
+            - "This is a comment"
+            - "This is a reply"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-11-27T21:30:00Z"
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        text:
+          type: string
+          example: "This is an example comment."
+        author:
+          type: string
+          example: "author@example.com"
+        published_date:
+          type: string
+          format: date-time
+          example: "2024-11-30T12:00:00Z"
+        New:
+          type: string
+          example: "Example News Title"
+        parent:
+          type: string
+          example: "Parent Comment (if nested)"
+    Submit:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: "Example Title"
+        url:
+          type: string
+          example: "https://example.com"
+        text:
+          type: string
+          example: "This is the content"
+        author:
+          type: string
+          example: "author@example.com"
+        published_date:
+          type: string
+          format: date-time
+        points:
+          type: integer
+          example: 0
+        is_hidden:
+          type: boolean
+          example: false
+      required:
+        - title
+
+  requestBodies:
+    New:
+      description: New object that needs to be added
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/News'
+            
+    NewsArray:
+      description: Llista de news
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/News'
+
+    UserArray:
+      description: List of user object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: X-API-Key
+      in: header
