@@ -168,3 +168,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "https://hackertimes-0dd5aa346ba7.herokuapp.com",
 ]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',  # Agregar 'authorization' si es necesario para tus cabeceras
+    'X-API-Key',
+    'X-api-key',
+]
