@@ -165,3 +165,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://editor.swagger.io",
     "http://localhost:8000",
 ]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',  # Agregar 'authorization' si es necesario para tus cabeceras
+    'X-API-Key',
+    'X-api-key',
+]
