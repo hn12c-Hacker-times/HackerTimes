@@ -211,7 +211,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
         api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
         if not api_key:
             return Response(
-                {"error": "API key is required"}, 
+                {"error": "API key is required"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -224,8 +224,12 @@ class SubmitViewSet(viewsets.ModelViewSet):
             
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
-                serializer.save()  # El autor se asignará automáticamente en el serializer
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                try:
+                    new = News.objects.get(url=data.get('url'))
+                    return Response(NewsSerializer(new).data, status=status.HTTP_200_OK)
+                except News.DoesNotExist:
+                    serializer.save()  # El autor se asignará automáticamente en el serializer
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except CustomUser.DoesNotExist:
@@ -299,8 +303,8 @@ class SubmitViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, 
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, submission_id):
-        # Obtener la clave API de las cabeceras de la solicitud
+    def destroy(self, request, pk, *args, **kwargs):
+        
         key = request.headers.get('X-API-Key')
         if not key:
             return Response({"error": "L'usuari no ha iniciat sessió"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -315,7 +319,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
 
         # Intentar obtener la submission a eliminar
         try:
-            submission = News.objects.get(id=submission_id)
+            submission = News.objects.get(id=pk)
         except News.DoesNotExist:
             return Response({"error": "La submission no existeix"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -326,7 +330,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
         # Eliminar la submission
         submission.delete()
 
-        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)  
+        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
