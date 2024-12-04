@@ -17,11 +17,9 @@ info:
 
     Some useful links:
 
-    - [The Pet Store
-    repository](https://127.0.0.1/)
+    - [The HackerTimes WebApp](https://hackertimes-0dd5aa346ba7.herokuapp.com)
 
-    - [The source API definition for HackerTimes
-    Store](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
+    - [The source API definition for HackerTimes](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
     
   termsOfService: http://swagger.io/terms/
   contact:

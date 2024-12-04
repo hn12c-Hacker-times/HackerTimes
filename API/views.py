@@ -312,7 +312,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, 
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, submission_id):
+    def destroy(self, request, pk):
         # Obtener la clave API de las cabeceras de la solicitud
         key = request.headers.get('X-API-Key')
         if not key:
@@ -328,7 +328,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
 
         # Intentar obtener la submission a eliminar
         try:
-            submission = News.objects.get(id=submission_id)
+            submission = News.objects.get(id=pk)
         except News.DoesNotExist:
             return Response({"error": "La submission no existeix"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -339,7 +339,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
         # Eliminar la submission
         submission.delete()
 
-        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)  
+        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
