@@ -33,8 +33,10 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-    'https://hackertimes-0dd5aa346ba7.herokuapp.com'
-    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/'
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com',
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/',
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com/',
+    'https://hackertimes-0dd5aa346ba7.herokuapp.com/user/',
 ]
 
 # Application definition
@@ -164,4 +166,5 @@ AWS_S3_CUSTOM_DOMAIN = f'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com'
 CORS_ALLOWED_ORIGINS = [
     "https://editor.swagger.io",
     "http://localhost:8000",
+    "https://hackertimes-0dd5aa346ba7.herokuapp.com",
 ]
