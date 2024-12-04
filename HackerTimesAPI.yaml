@@ -17,11 +17,9 @@ info:
 
     Some useful links:
 
-    - [The Pet Store
-    repository](https://127.0.0.1/)
+    - [The HackerTimes WebApp](https://hackertimes-0dd5aa346ba7.herokuapp.com)
 
-    - [The source API definition for HackerTimes
-    Store](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
+    - [The source API definition for HackerTimes](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
     
   termsOfService: http://swagger.io/terms/
   contact:
@@ -451,7 +449,7 @@ paths:
       tags:
         - submit
       summary: Creació d'una nova submission
-      description: Crea una nova notícia o una pregunta (ask)
+      description: Crea una nova notícia o una pregunta (ask), o retorna la new amb url igual a la del body
       operationId: createSubmit
       requestBody:
         required: true
@@ -472,6 +470,31 @@ paths:
               required:
                 - title
       responses:
+        '200':
+          description: New ja existeix
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+                example:
+                  {
+                    "id": 1,
+                    "title": "Títol d'exemple",
+                    "url": "https://example.com",
+                    "text": "Aquest és el contingut",
+                    "author": "user@example.com"
+                  }
         '201':
           description: Creada correctament
           content:
