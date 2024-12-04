@@ -9,12 +9,12 @@ class APIKeyMiddleware:
         if request.path.startswith('/api/'):
             api_key = request.headers.get('X-API-Key')
             if not api_key:
-                return JsonResponse({'error': 'API key required'}, status=401)
+                return JsonResponse({'error': "Cal proporcionar l'API Key"}, status=401)
             
             try:
                 user = CustomUser.objects.get(api_key=api_key)
                 request.user = user
             except CustomUser.DoesNotExist:
-                return JsonResponse({'error': 'Invalid API key'}, status=401)
+                return JsonResponse({'error': 'API key no vàlida'}, status=401)
 
         return self.get_response(request)
