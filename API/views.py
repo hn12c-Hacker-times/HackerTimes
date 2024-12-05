@@ -278,11 +278,11 @@ class SubmitViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
             # Validar campos permitidos
-            allowed_fields = ["title", "text"] if not submission.url else ["title", "url"]
+            allowed_fields = ["title", "text"] if not submission.url else ["title", "url", "text"]
             for key in request.data.keys():
                 if key not in allowed_fields:
                     return Response(
-                        {"error": f"No es pot modificar el camp {key}, o aquest no existeix."}, 
+                        {"error": f"No es pot modificar el camp {key}, o aquest no existeix."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
