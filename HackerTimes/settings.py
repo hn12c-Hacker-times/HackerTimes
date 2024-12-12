@@ -163,13 +163,14 @@ AWS_STORAGE_BUCKET_NAME = "hn12c-hackertimes"
 AWS_S3_REGION_NAME = "us-east-1"
 AWS_S3_CUSTOM_DOMAIN = f'https://hn12c-hackertimes.s3.us-east-1.amazonaws.com'
 
-# CORS CONFIGURATION
+"""# CORS CONFIGURATION
 CORS_ALLOWED_ORIGINS = [
     "https://editor.swagger.io",
     "http://localhost:8000",
     "http://localhost:5173",
     "https://hackertimes-0dd5aa346ba7.herokuapp.com",
-]
+]"""
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'content-type',
@@ -177,10 +178,3 @@ CORS_ALLOW_HEADERS = [
     'X-API-Key',
     'X-api-key',
 ]
-ACCESS_CONTROL_ALLOW_ORIGINS = [
-    "https://editor.swagger.io",
-    "http://localhost:8000",
-    "http://localhost:5173",
-    "https://hackertimes-0dd5aa346ba7.herokuapp.com",
-]
-ACCESS_CONTROL_ALLOW_CREDENTIALS = True
