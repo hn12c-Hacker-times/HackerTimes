@@ -177,3 +177,10 @@ CORS_ALLOW_HEADERS = [
     'X-API-Key',
     'X-api-key',
 ]
+ACCESS_CONTROL_ALLOW_ORIGINS = [
+    "https://editor.swagger.io",
+    "http://localhost:8000",
+    "http://localhost:5173",
+    "https://hackertimes-0dd5aa346ba7.herokuapp.com",
+]
+ACCESS_CONTROL_ALLOW_CREDENTIALS = True
