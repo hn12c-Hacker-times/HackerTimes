@@ -137,7 +137,7 @@ class NewListViewSet(viewsets.ModelViewSet):
 
 
 class AskViewSet(viewsets.ModelViewSet):
-    queryset = News.objects.filter(url='').order_by('-published_date')  # Solo las publicaciones tipo Ask
+    queryset = News.objects.filter(url__isnull=True).order_by('-published_date')  # Solo las publicaciones tipo Ask
     serializer_class = AskSerializer
 
     def list(self, request, *args, **kwargs):
