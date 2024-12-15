@@ -769,30 +769,69 @@ class CommentViewSet(viewsets.ViewSet):
     """
     def list(self, request):
         """
-        Retorna una llista de comentaris o els comentaris d'un usuari si s'especifica el `username`.
+        Retorna una llista de comentaris. Si s'especifica `username` o `news_id`, filtra els comentaris.
         """
         username = request.query_params.get('username')
+        news_id = request.query_params.get('news_id')  # Nou paràmetre per filtrar per notícia
+
+        # Filtrar comentaris per username
         if username:
-            # Recuperar l'usuari pel username
             user = get_object_or_404(CustomUser, username=username)
-
-            # Recuperar els comentaris de l'usuari
             comments = Comments.objects.filter(author=user).order_by('-published_date')
-            serializer = CommentsSerializer(comments, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # Recuperar tots els comentaris si no s'especifica el `username`
-        comments = Comments.objects.all().order_by('-published_date')
+        # Filtrar comentaris per news_id
+        elif news_id:
+            comments = Comments.objects.filter(New=news_id).order_by('-published_date')
+
+        # Recuperar tots els comentaris
+        else:
+            comments = Comments.objects.all().order_by('-published_date')
+
+        # Serialitzar els comentaris
         serializer = CommentsSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def retrieve(self, request, pk=None):
         """
-        Retorna un comentari específic pel seu identificador.
+        Retorna un comentari específic i tots els seus replies, inclosos els nested replies,
+        i afegeix la informació de la notícia associada (id i title) per al comentari principal.
         """
-        comment = get_comment_or_404(pk)
-        serializer = CommentsSerializer(comment)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Obtain the parent comment
+        parent_comment = get_object_or_404(Comments, pk=pk)
+
+        # Recursively get all replies
+        def get_replies(comment):
+            replies = Comments.objects.filter(parent=comment).order_by('published_date')
+            return [
+                {
+                    "id": reply.id,
+                    "text": reply.text,
+                    "author": reply.author.username,
+                    "published_date": reply.published_date,
+                    "replies": get_replies(reply)  # Recursive call for nested replies
+                }
+                for reply in replies
+            ]
+
+        # Add news information for the parent comment
+        news_info = None
+        if parent_comment.New:  # Check if the comment has an associated news
+            news_info = {
+                "id": parent_comment.New.id,
+                "title": parent_comment.New.title
+            }
+
+        # Build the response
+        response_data = {
+            "id": parent_comment.id,
+            "text": parent_comment.text,
+            "author": parent_comment.author.username,
+            "published_date": parent_comment.published_date,
+            "New": news_info,  # Include news information
+            "replies": get_replies(parent_comment),
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     def create(self, request):
         """

@@ -37,10 +37,19 @@ class NewsSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
         
 class CommentsSerializer(serializers.ModelSerializer):
+    New = serializers.SerializerMethodField()
+
     class Meta:
         model = Comments
         fields = ['id', 'text', 'author', 'published_date', 'New', 'parent']
 
+    def get_New(self, obj):
+        if obj.New:
+            return {
+                'id': obj.New.id,
+                'title': obj.New.title,
+            }
+        return None
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
