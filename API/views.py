@@ -15,6 +15,8 @@ from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
 from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, AskSerializer, SubmitSerializer
 import tldextract, boto3
+from django.db.models import Q
+
 
 # Create your views here.
 """
@@ -137,13 +139,20 @@ class NewListViewSet(viewsets.ModelViewSet):
 
 
 class AskViewSet(viewsets.ModelViewSet):
-    queryset = News.objects.filter(url='').order_by('-published_date')  # Solo las publicaciones tipo Ask
     serializer_class = AskSerializer
 
+    def get_queryset(self):
+        # Devuelve un queryset fresco cada vez que se ejecuta
+        return News.objects.filter(Q(url='') | Q(url__isnull=True)).order_by('-published_date')
+
     def list(self, request, *args, **kwargs):
-        # Calcular relevancia y ordenar
-        print("Se accedió al endpoint de AskViewSet")
-        asks_list = list(self.queryset)
+        # Debug: Imprimir el queryset antes de cualquier modificación
+        print("Debug - Queryset de AskViewSet:")
+        for ask in self.get_queryset():
+            print(f"ID: {ask.id}, Title: {ask.title}, URL: '{ask.url}'")
+
+        # Resto del código
+        asks_list = list(self.get_queryset())
         asks_list.sort(
             key=lambda ask: calculate_relevance(ask.points, ask.published_date),
             reverse=True  # Orden descendente

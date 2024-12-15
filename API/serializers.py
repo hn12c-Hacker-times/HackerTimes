@@ -65,7 +65,7 @@ class ThreadSerializer(serializers.ModelSerializer):
 class AskSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
-        fields = ['title', 'text', 'author', 'published_date', 'points']
+        fields = ['title', 'text', 'author', 'published_date', 'points', 'url']
 
 class SubmitSerializer(serializers.ModelSerializer):
     # Hacer que author sea de solo lectura
