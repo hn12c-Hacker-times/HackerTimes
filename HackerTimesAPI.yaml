@@ -17,11 +17,9 @@ info:
 
     Some useful links:
 
-    - [The Pet Store
-    repository](https://127.0.0.1/)
+    - [The HackerTimes WebApp](https://hackertimes-0dd5aa346ba7.herokuapp.com)
 
-    - [The source API definition for HackerTimes
-    Store](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
+    - [The source API definition for HackerTimes](https://github.com/hn12c-Hacker-times/HackerTimes/tree/develop)
     
   termsOfService: http://swagger.io/terms/
   contact:
@@ -38,33 +36,33 @@ tags:
     description: News ordenades per relevància
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/
   - name: newest
     description: News ordenades per data
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/newest/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/newest/
   - name: ask
     description: Asks ordenades per data
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/ask/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/ask/
   - name: thread
     description: threads ordenats per data
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/threads/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/threads/
   - name: user
     description: Operacions de usuaris
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/user/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/user/
 
   - name: submit
     description: Operacions de submissions
     externalDocs:
       description: Mira-ho en format web
-      url: http://127.0.0.1:8000/submit/
+      url: https://hackertimes-0dd5aa346ba7.herokuapp.com/submit/
 
   - name: comment
     description: Operacions de submissions
@@ -451,7 +449,7 @@ paths:
       tags:
         - submit
       summary: Creació d'una nova submission
-      description: Crea una nova notícia o una pregunta (ask)
+      description: Crea una nova notícia o una pregunta (ask), o retorna la new amb url igual a la del body
       operationId: createSubmit
       requestBody:
         required: true
@@ -472,6 +470,31 @@ paths:
               required:
                 - title
       responses:
+        '200':
+          description: New ja existeix
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  text:
+                    type: string
+                  author:
+                    type: string
+                example:
+                  {
+                    "id": 1,
+                    "title": "Títol d'exemple",
+                    "url": "https://example.com",
+                    "text": "Aquest és el contingut",
+                    "author": "user@example.com"
+                  }
         '201':
           description: Creada correctament
           content:
