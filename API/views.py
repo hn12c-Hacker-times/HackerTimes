@@ -649,6 +649,18 @@ class FavoriteNewsViewSet(viewsets.ViewSet):
         favorite_news = user.favorite_news.all().order_by('-published_date')
         serializer = NewsSerializer(favorite_news, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def retrieve(self, request, pk=None):
+        """
+        Comprova si una notícia està a la llista de preferits de l'usuari autenticat.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news = get_news_or_404(pk)
+        is_favorited = news in user.favorite_news.all()
+        return Response({"is_favorited": is_favorited}, status=status.HTTP_200_OK)
 
     def create(self, request, pk=None):
         """
@@ -735,6 +747,18 @@ class FavoriteCommentsViewSet(viewsets.ViewSet):
         # Eliminar dels preferits
         user.favorite_comments.remove(comment)
         return Response({"message": "Comentari eliminat dels preferits.", "comment_id": comment.id}, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        """
+        Verificar si un comentari està a la llista de preferits de l'usuari autenticat.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = get_comment_or_404(pk)
+        is_favorited = comment in user.favorite_comments.all()
+        return Response({"is_favorited": is_favorited}, status=status.HTTP_200_OK)
 
 class VotedNewsViewSet(viewsets.ViewSet):
     """
