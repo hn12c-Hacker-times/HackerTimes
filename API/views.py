@@ -15,6 +15,8 @@ from rest_framework.authtoken.models import Token
 from News.models import News, Comments, CustomUser, HiddenNews, Thread
 from .serializers import NewsSerializer, CommentsSerializer, CustomUserSerializer, HiddenNewsSerializer, ThreadSerializer, AskSerializer, SubmitSerializer
 import tldextract, boto3
+from django.db.models import Q
+
 
 # Create your views here.
 """
@@ -84,7 +86,77 @@ def get_comment_or_404(pk):
 class NewListViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
-    
+
+    def list(self, request, *args, **kwargs):
+        user_data = self.request.session.get('user_data')
+        name = request.query_params.get("name", "")
+        user_email = user_data.get('email') if user_data else None
+        username = request.query_params.get("username", "")
+        email = request.query_params.get("email", "")
+
+        # Filtrado inicial de noticias
+        queryset = News.objects.all()
+        
+        if name:
+            queryset = queryset.filter(title__icontains=name)
+        
+        if username:
+            author = CustomUser.objects.filter(username=username).first()
+            if author:
+                queryset = queryset.filter(author=author.email)
+        
+        if email:
+            queryset = queryset.filter(author=email)
+
+        # Si el usuario está logueado, excluir las noticias ocultas
+        if user_data:
+            user = CustomUser.objects.get(email=user_data['email'])
+
+            # Obtener las noticias ocultas para ese usuario
+            hidden_news_ids = HiddenNews.objects.filter(user=user).values_list('news_id', flat=True)
+            
+            # Filtrar las noticias y excluir las ocultas
+            queryset = queryset.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
+
+            # Convertir el queryset a una lista de objetos
+            news_list = list(queryset)
+
+            # Crear una lista de tuplas (news_item, relevance) para ordenar
+            news_with_relevance = [
+                (news_item, calculate_relevance(news_item.points, news_item.published_date))
+                for news_item in news_list
+            ]
+            
+            # Ordenar las noticias por relevancia (descendente)
+            news_with_relevance.sort(key=lambda x: x[1], reverse=True)
+
+            # Extraer solo las noticias ordenadas
+            sorted_news = [news_item for news_item, _ in news_with_relevance]
+
+            # Anotar los votos del usuario
+            sorted_news = annotate_user_votes(sorted_news, user_email)
+
+            # Serializar y devolver la respuesta
+            return Response(NewsSerializer(sorted_news, many=True).data, status=status.HTTP_200_OK)
+
+        # Si el usuario no está logueado, solo filtrar y ordenar por relevancia
+        news_list = list(queryset)
+        
+        # Crear una lista de tuplas (news_item, relevance) para ordenar
+        news_with_relevance = [
+            (news_item, calculate_relevance(news_item.points, news_item.published_date))
+            for news_item in news_list
+        ]
+        
+        # Ordenar las noticias por relevancia (descendente)
+        news_with_relevance.sort(key=lambda x: x[1], reverse=True)
+
+        # Extraer solo las noticias ordenadas
+        sorted_news = [news_item for news_item, _ in news_with_relevance]
+
+        # Serializar y devolver la respuesta
+        return Response(NewsSerializer(sorted_news, many=True).data, status=status.HTTP_200_OK)
+"""
     def list(self, request, *args, **kwargs):
         user_data = self.request.session.get('user_data')
         name = request.query_params.get("name","")
@@ -121,29 +193,37 @@ class NewListViewSet(viewsets.ModelViewSet):
                 key=lambda news: calculate_relevance(news.points, news.published_date),
                 reverse=True  # Ensures descending order
             )
-            sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
+            #sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
+            sorted_queryset = sorted(news_list, key=lambda news: calculate_relevance(news.points, news.published_date), reverse=True)
             return Response(NewsSerializer(annotate_user_votes(sorted_queryset, user_email), many=True).data, status=status.HTTP_200_OK)
 
         # Si el usuario no está logueado, mostrar todas las noticias
         
         # Calculate relevance for each item and sort manually
         news_list = list(queryset)
-        news_list.sort(
-            key=lambda news: calculate_relevance(news.points, news.published_date),
-            reverse=True  # Ensures descending order
-        )
+        #news_list.sort(key=lambda news: calculate_relevance(news.points, news.published_date),reverse=True  # Ensures descending order)
+        
+        sorted_queryset = sorted(news_list, key=lambda news: calculate_relevance(news.points, news.published_date), reverse=True)
         sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
+        sorted_queryset.reverse()
         return Response(NewsSerializer(sorted_queryset, many=True).data, status=status.HTTP_200_OK)
-
+"""
 
 class AskViewSet(viewsets.ModelViewSet):
-    queryset = News.objects.filter(url='').order_by('-published_date')  # Solo las publicaciones tipo Ask
     serializer_class = AskSerializer
 
+    def get_queryset(self):
+        # Devuelve un queryset fresco cada vez que se ejecuta
+        return News.objects.filter(Q(url='') | Q(url__isnull=True)).order_by('-published_date')
+
     def list(self, request, *args, **kwargs):
-        # Calcular relevancia y ordenar
-        print("Se accedió al endpoint de AskViewSet")
-        asks_list = list(self.queryset)
+        # Debug: Imprimir el queryset antes de cualquier modificación
+        print("Debug - Queryset de AskViewSet:")
+        for ask in self.get_queryset():
+            print(f"ID: {ask.id}, Title: {ask.title}, URL: '{ask.url}'")
+
+        # Resto del código
+        asks_list = list(self.get_queryset())
         asks_list.sort(
             key=lambda ask: calculate_relevance(ask.points, ask.published_date),
             reverse=True  # Orden descendente
@@ -183,13 +263,13 @@ class NewestListViewSet(viewsets.ModelViewSet):
         if email:
             queryset = queryset.filter(author=email)
 
-        queryset.filter(is_hidden=False).order_by('-published_date')
+        queryset = queryset.filter(is_hidden=False).order_by('-published_date')
         queryset = annotate_user_votes(queryset, user_email)
         return Response(NewsSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
 class SubmitViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
-    serializer_class = NewsSerializer
+    serializer_class = SubmitSerializer
     
     def get_serializer_context(self):
         """
@@ -211,7 +291,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
         api_key = request.META.get('HTTP_X_API_KEY') or request.query_params.get('api_key')
         if not api_key:
             return Response(
-                {"error": "API key is required"},
+                {"error": "API key is required"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -224,12 +304,8 @@ class SubmitViewSet(viewsets.ModelViewSet):
             
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
-                try:
-                    new = News.objects.get(url=data.get('url'))
-                    return Response(NewsSerializer(new).data, status=status.HTTP_200_OK)
-                except News.DoesNotExist:
-                    serializer.save()  # El autor se asignará automáticamente en el serializer
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                serializer.save()  # El autor se asignará automáticamente en el serializer
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         except CustomUser.DoesNotExist:
@@ -282,7 +358,7 @@ class SubmitViewSet(viewsets.ModelViewSet):
             for key in request.data.keys():
                 if key not in allowed_fields:
                     return Response(
-                        {"error": f"No es pot modificar el camp {key}, o aquest no existeix."},
+                        {"error": f"No es pot modificar el camp {key}, o aquest no existeix."}, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
@@ -303,34 +379,37 @@ class SubmitViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, 
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk, *args, **kwargs):
-        
+    def destroy(self, request, pk=None):
+        # Verificar API key
         key = request.headers.get('X-API-Key')
         if not key:
             return Response({"error": "L'usuari no ha iniciat sessió"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Intentar obtener al usuario mediante la clave API
         try:
+            # Obtener usuario
             user = CustomUser.objects.get(api_key=key)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "L'usuari no existeix"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception:
-            return Response({"error": "Api-key amb format incorrecte"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Intentar obtener la submission a eliminar
-        try:
+            # Obtener submission
             submission = News.objects.get(id=pk)
+
+            # Verificar autoría
+            if submission.author != user:
+                return Response({"error": "No tens permisos per eliminar aquesta submission"}, 
+                                status=status.HTTP_403_FORBIDDEN)
+
+            # Eliminar submission
+            submission.delete()
+            return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
+
+        except CustomUser.DoesNotExist:
+            return Response({"error": "L'usuari no existeix"}, 
+                            status=status.HTTP_404_NOT_FOUND)
         except News.DoesNotExist:
-            return Response({"error": "La submission no existeix"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Verificar que el usuario es el autor de la submission
-        if submission.author != user:
-            return Response({"error": "No tens permisos per eliminar aquesta submission"}, status=status.HTTP_403_FORBIDDEN)
-
-        # Eliminar la submission
-        submission.delete()
-
-        return Response({"detail": "Submission esborrada correctament"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"error": "La submission no existeix"}, 
+                            status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, 
+                            status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -448,7 +527,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
         api_key = request.headers.get('X-API-Key') or request.query_params.get('api_key')
         if not api_key:
             return Response(
-                {"error": "API key is required"}, 
+                {'error': "Cal proporcionar l'API Key"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -495,7 +574,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
 
         except CustomUser.DoesNotExist:
             return Response(
-                {"error": "Invalid API key"}, 
+                {'error': 'API key no vàlida'}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
@@ -641,6 +720,18 @@ class FavoriteNewsViewSet(viewsets.ViewSet):
         favorite_news = user.favorite_news.all().order_by('-published_date')
         serializer = NewsSerializer(favorite_news, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def retrieve(self, request, pk=None):
+        """
+        Comprova si una notícia està a la llista de preferits de l'usuari autenticat.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        news = get_news_or_404(pk)
+        is_favorited = news in user.favorite_news.all()
+        return Response({"is_favorited": is_favorited}, status=status.HTTP_200_OK)
 
     def create(self, request, pk=None):
         """
@@ -728,6 +819,18 @@ class FavoriteCommentsViewSet(viewsets.ViewSet):
         user.favorite_comments.remove(comment)
         return Response({"message": "Comentari eliminat dels preferits.", "comment_id": comment.id}, status=status.HTTP_200_OK)
 
+    def retrieve(self, request, pk=None):
+        """
+        Verificar si un comentari està a la llista de preferits de l'usuari autenticat.
+        """
+        user, error_response = validate_api_key(request)
+        if error_response:
+            return error_response
+
+        comment = get_comment_or_404(pk)
+        is_favorited = comment in user.favorite_comments.all()
+        return Response({"is_favorited": is_favorited}, status=status.HTTP_200_OK)
+
 class VotedNewsViewSet(viewsets.ViewSet):
     """
     API ViewSet per obtenir les notícies votades per un usuari.
@@ -770,30 +873,69 @@ class CommentViewSet(viewsets.ViewSet):
     """
     def list(self, request):
         """
-        Retorna una llista de comentaris o els comentaris d'un usuari si s'especifica el `username`.
+        Retorna una llista de comentaris. Si s'especifica `username` o `news_id`, filtra els comentaris.
         """
         username = request.query_params.get('username')
+        news_id = request.query_params.get('news_id')  # Nou paràmetre per filtrar per notícia
+
+        # Filtrar comentaris per username
         if username:
-            # Recuperar l'usuari pel username
             user = get_object_or_404(CustomUser, username=username)
-
-            # Recuperar els comentaris de l'usuari
             comments = Comments.objects.filter(author=user).order_by('-published_date')
-            serializer = CommentsSerializer(comments, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # Recuperar tots els comentaris si no s'especifica el `username`
-        comments = Comments.objects.all().order_by('-published_date')
+        # Filtrar comentaris per news_id
+        elif news_id:
+            comments = Comments.objects.filter(New=news_id).order_by('-published_date')
+
+        # Recuperar tots els comentaris
+        else:
+            comments = Comments.objects.all().order_by('-published_date')
+
+        # Serialitzar els comentaris
         serializer = CommentsSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def retrieve(self, request, pk=None):
         """
-        Retorna un comentari específic pel seu identificador.
+        Retorna un comentari específic i tots els seus replies, inclosos els nested replies,
+        i afegeix la informació de la notícia associada (id i title) per al comentari principal.
         """
-        comment = get_comment_or_404(pk)
-        serializer = CommentsSerializer(comment)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Obtain the parent comment
+        parent_comment = get_object_or_404(Comments, pk=pk)
+
+        # Recursively get all replies
+        def get_replies(comment):
+            replies = Comments.objects.filter(parent=comment).order_by('published_date')
+            return [
+                {
+                    "id": reply.id,
+                    "text": reply.text,
+                    "author": reply.author.username,
+                    "published_date": reply.published_date,
+                    "replies": get_replies(reply)  # Recursive call for nested replies
+                }
+                for reply in replies
+            ]
+
+        # Add news information for the parent comment
+        news_info = None
+        if parent_comment.New:  # Check if the comment has an associated news
+            news_info = {
+                "id": parent_comment.New.id,
+                "title": parent_comment.New.title
+            }
+
+        # Build the response
+        response_data = {
+            "id": parent_comment.id,
+            "text": parent_comment.text,
+            "author": parent_comment.author.username,
+            "published_date": parent_comment.published_date,
+            "New": news_info,  # Include news information
+            "replies": get_replies(parent_comment),
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     def create(self, request):
         """
@@ -963,8 +1105,10 @@ class HiddenSubmissionsViewSet(viewsets.ViewSet):
                 "submission_id": hidden_submission.news.id,
                 "title": hidden_submission.news.title,
                 "url": hidden_submission.news.url,
+                "points": hidden_submission.news.points,
                 "text": hidden_submission.news.text,
                 "hidden_at": hidden_submission.hidden_at,
+                "author": hidden_submission.news.author.username,
             }
             for hidden_submission in hidden_submissions
         ]
