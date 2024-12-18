@@ -13,7 +13,7 @@ class NewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = News
-        fields = ['id', 'title', 'url', 'urlDomain', 'text', 'author', 'points', 'is_hidden']
+        fields = ['id', 'title', 'url', 'urlDomain', 'text','published_date', 'author', 'points', 'is_hidden']
         read_only_fields = ['id', 'points', 'is_hidden', 'urlDomain', 'author']  # Incluir author aquí también
         
     def create(self, validated_data):
@@ -37,10 +37,19 @@ class NewsSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
         
 class CommentsSerializer(serializers.ModelSerializer):
+    New = serializers.SerializerMethodField()
+
     class Meta:
         model = Comments
         fields = ['id', 'text', 'author', 'published_date', 'New', 'parent']
 
+    def get_New(self, obj):
+        if obj.New:
+            return {
+                'id': obj.New.id,
+                'title': obj.New.title,
+            }
+        return None
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,7 +74,7 @@ class ThreadSerializer(serializers.ModelSerializer):
 class AskSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
-        fields = ['title', 'text', 'author', 'published_date', 'points', 'url']
+        fields = ['id','title', 'text', 'author', 'published_date', 'points', 'url']
 
 class SubmitSerializer(serializers.ModelSerializer):
     # Hacer que author sea de solo lectura
