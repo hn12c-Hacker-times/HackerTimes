@@ -33,7 +33,7 @@ urlpatterns = [
     path('user/update/', views.CustomUserViewSet.as_view({'put': 'update'}), name='customuser_detail'),
     path('user/<str:email>/', views.CustomUserViewSet.as_view({'get': 'retrieve'}), name='customuser_detail'),
     path('submit/<int:pk>/edit/', SubmitViewSet.as_view({'put': 'update'}), name='submit_edit'),
-    path('submit/<int:pk>/delete/', SubmitViewSet.as_view({'delete': 'destroy'}), name='submit_delete'),    
+    path('submit/<int:pk>/', SubmitViewSet.as_view({'delete': 'destroy'}), name='delete'),    
     path('news-vote/<int:pk>/', NewsVoteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='news-vote-detail'),
     path('comment-vote/<int:pk>/', CommentVoteViewSet.as_view({'post': 'create', 'delete': 'delete'}), name='comment-vote-detail'),
     path('voted-news/', VotedNewsViewSet.as_view({'get': 'list'}), name='voted-news-list'),
@@ -45,6 +45,6 @@ urlpatterns = [
     path('hide/<int:pk>/', HideSubmissionViewSet.as_view({'post': 'create'}), name='hide_submission'),
     path('unhide/<int:pk>/', UnhideSubmissionViewSet.as_view({'delete': 'delete'}), name='unhide_submission'),
     path('hidden-submissions/', HiddenSubmissionsViewSet.as_view({'get': 'list'}), name='hidden_submissions_list'),
-    path('', include(router.urls)),
+    #path('', include(router.urls)),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

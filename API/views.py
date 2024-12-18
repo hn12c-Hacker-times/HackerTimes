@@ -86,7 +86,77 @@ def get_comment_or_404(pk):
 class NewListViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
-    
+
+    def list(self, request, *args, **kwargs):
+        user_data = self.request.session.get('user_data')
+        name = request.query_params.get("name", "")
+        user_email = user_data.get('email') if user_data else None
+        username = request.query_params.get("username", "")
+        email = request.query_params.get("email", "")
+
+        # Filtrado inicial de noticias
+        queryset = News.objects.all()
+        
+        if name:
+            queryset = queryset.filter(title__icontains=name)
+        
+        if username:
+            author = CustomUser.objects.filter(username=username).first()
+            if author:
+                queryset = queryset.filter(author=author.email)
+        
+        if email:
+            queryset = queryset.filter(author=email)
+
+        # Si el usuario está logueado, excluir las noticias ocultas
+        if user_data:
+            user = CustomUser.objects.get(email=user_data['email'])
+
+            # Obtener las noticias ocultas para ese usuario
+            hidden_news_ids = HiddenNews.objects.filter(user=user).values_list('news_id', flat=True)
+            
+            # Filtrar las noticias y excluir las ocultas
+            queryset = queryset.filter(is_hidden=False).exclude(id__in=hidden_news_ids)
+
+            # Convertir el queryset a una lista de objetos
+            news_list = list(queryset)
+
+            # Crear una lista de tuplas (news_item, relevance) para ordenar
+            news_with_relevance = [
+                (news_item, calculate_relevance(news_item.points, news_item.published_date))
+                for news_item in news_list
+            ]
+            
+            # Ordenar las noticias por relevancia (descendente)
+            news_with_relevance.sort(key=lambda x: x[1], reverse=True)
+
+            # Extraer solo las noticias ordenadas
+            sorted_news = [news_item for news_item, _ in news_with_relevance]
+
+            # Anotar los votos del usuario
+            sorted_news = annotate_user_votes(sorted_news, user_email)
+
+            # Serializar y devolver la respuesta
+            return Response(NewsSerializer(sorted_news, many=True).data, status=status.HTTP_200_OK)
+
+        # Si el usuario no está logueado, solo filtrar y ordenar por relevancia
+        news_list = list(queryset)
+        
+        # Crear una lista de tuplas (news_item, relevance) para ordenar
+        news_with_relevance = [
+            (news_item, calculate_relevance(news_item.points, news_item.published_date))
+            for news_item in news_list
+        ]
+        
+        # Ordenar las noticias por relevancia (descendente)
+        news_with_relevance.sort(key=lambda x: x[1], reverse=True)
+
+        # Extraer solo las noticias ordenadas
+        sorted_news = [news_item for news_item, _ in news_with_relevance]
+
+        # Serializar y devolver la respuesta
+        return Response(NewsSerializer(sorted_news, many=True).data, status=status.HTTP_200_OK)
+"""
     def list(self, request, *args, **kwargs):
         user_data = self.request.session.get('user_data')
         name = request.query_params.get("name","")
@@ -123,20 +193,21 @@ class NewListViewSet(viewsets.ModelViewSet):
                 key=lambda news: calculate_relevance(news.points, news.published_date),
                 reverse=True  # Ensures descending order
             )
-            sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
+            #sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
+            sorted_queryset = sorted(news_list, key=lambda news: calculate_relevance(news.points, news.published_date), reverse=True)
             return Response(NewsSerializer(annotate_user_votes(sorted_queryset, user_email), many=True).data, status=status.HTTP_200_OK)
 
         # Si el usuario no está logueado, mostrar todas las noticias
         
         # Calculate relevance for each item and sort manually
         news_list = list(queryset)
-        news_list.sort(
-            key=lambda news: calculate_relevance(news.points, news.published_date),
-            reverse=True  # Ensures descending order
-        )
+        #news_list.sort(key=lambda news: calculate_relevance(news.points, news.published_date),reverse=True  # Ensures descending order)
+        
+        sorted_queryset = sorted(news_list, key=lambda news: calculate_relevance(news.points, news.published_date), reverse=True)
         sorted_queryset = News.objects.filter(id__in=[news.id for news in news_list])
+        sorted_queryset.reverse()
         return Response(NewsSerializer(sorted_queryset, many=True).data, status=status.HTTP_200_OK)
-
+"""
 
 class AskViewSet(viewsets.ModelViewSet):
     serializer_class = AskSerializer
@@ -192,7 +263,7 @@ class NewestListViewSet(viewsets.ModelViewSet):
         if email:
             queryset = queryset.filter(author=email)
 
-        queryset.filter(is_hidden=False).order_by('-published_date')
+        queryset = queryset.filter(is_hidden=False).order_by('-published_date')
         queryset = annotate_user_votes(queryset, user_email)
         return Response(NewsSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
 
