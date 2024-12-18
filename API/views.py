@@ -1034,8 +1034,10 @@ class HiddenSubmissionsViewSet(viewsets.ViewSet):
                 "submission_id": hidden_submission.news.id,
                 "title": hidden_submission.news.title,
                 "url": hidden_submission.news.url,
+                "points": hidden_submission.news.points,
                 "text": hidden_submission.news.text,
                 "hidden_at": hidden_submission.hidden_at,
+                "author": hidden_submission.news.author.username,
             }
             for hidden_submission in hidden_submissions
         ]
